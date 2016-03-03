@@ -11,19 +11,27 @@
  On start 'midijoystick' will list your current configuration. Or you can use
  'explain_config' to check your configuration.
 
+
+ Currently joystick device file and configuration is hardcoded as:
+
+ | file          | path           |
+ |---------------+----------------|
+ | joystick      | /dev/input/js0 |
+ | configuration | ./input.conf   |
+
 * Configuration Syntax
 
 
 ((t i) CMD (CH PARAM))
 
-| token | note                                                                                                                                                  |
-|-------+-------------------------------------------------------------------------------------------------------------------------------------------------------|
-| t     | specifies input type -> axis (a) or button (b)                                                                                                        |
-| i     | specifies index of the input type (as decimal)                                                                                                        |
-| CMD   | Midi command identifier as two digit hex number (see table below)                                                                                     |
-| CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                           |
-| PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) |
-|       |                                                                                                                                                       |
+| token | note                                                                                                                                                  | values      |
+|-------+-------------------------------------------------------------------------------------------------------------------------------------------------------+-------------|
+| t     | specifies input type -> axis (a) or button (b)                                                                                                        | a, A, b, B  |
+| i     | specifies index of the input type (as decimal)                                                                                                        | 0 - 9       |
+| CMD   | Midi command identifier as two digit hex number (see table below)                                                                                     | 0x80 - 0xF0 |
+| CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                           | 0x00 - 0x0F |
+| PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) | 0x00 - 0x7F |
+|       |                                                                                                                                                       |             |
 
 
 * Working Midi Commands
