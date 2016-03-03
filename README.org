@@ -57,7 +57,7 @@ Additional Notes
 ----------------
 
  The joystick api maps axes values to a int16_t (positive and negative) range. While midi data bytes range from 0x00 to 0x7F.
- So we're mapping the axis values to uint32_t and then to the midi data range (0x00 - 0x7F), thus a axis value of 0x00 is a midi
+ So we're mapping the axis values to uint16_t and then to the midi data range (0x00 - 0x7F), thus a axis value of 0x00 is a midi
  value of 0x40. An axis value of 0x00 occures when the axis controler is at center position.
 
  Buttons emit midi values of 0x7F when pressed and 0x00 when released, so their usefullness is subpar as for example
