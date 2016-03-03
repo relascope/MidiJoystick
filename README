@@ -1,0 +1,63 @@
+MidiJoystick:
+
+ MidiJoystick is a JackClient which lets you use your joystick as a midicontroller.
+ You can map all axes and buttons to diffrent midi commands and channels.
+ Main usage would be as using it as Continuous Controller (CMD: 0xB0)
+ and Pitch Bend (CMD: 0xE0).
+
+ Use 'jstest' to workout the input indices of your joystick.
+
+ On start 'midijoystick' will list your current configuration. Or you can use
+ 'explain_config' to check your configuration.
+
+Configuration Syntax:
+
+((t i) CMD (CH PARAM))
+
+ t    : specifies input type -> axis (a) or button (b)
+ i    : specifies index of the input type (as decimal)
+ CMD  : Midi command identifier as two digit hex number (see table below)
+ CH   : Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1
+ PARAM: optional parameter as a two digit hex number (0x00 -> 0x7F), defaults to 0x00
+        meaning of parameter is specific to the midi command (see table below)
+
+ Comments can only occur on their own line and start with '#'.
+ The last line must be blank!
+
+Working Midi Commands:
+
+ * Note-on 0x80:		Param option sets reference note for the 'zero' position of a control
+   	   	 	      	eg: ((a 1) 0x80 (0x00 0x45)) -> when axis 1 is in zero postion, C4 is played on channel 1
+		 	    	WARNING: Note-off is currently not implemented
+
+ * Continuous Controler 0xB0:	Param option sets the controller number
+
+ * Pitch Bend 0xE0:		That's pitch bend, no param option used
+
+ * Patch Change 0xC0:		Param option specifies patch number
+
+ * Channel Pressure 0xD0:	Param option not used
+
+
+MidiCommands:
+
+  Command 	Meaning 	        # parameters 	param 1 	param 2			config
+  0x80   	Note-off 	        2 	        key 	        velocity		note offset reference
+  0x90	        Note-on 	        2 	        key 	        veolcity		note offset reference
+  0xA0	        Aftertouch 	        2 	        key 	        touch			-
+  0xB0	        Continuous controller 	2 	        controller # 	controller value	controller #
+  0xC0	        Patch change 	        1 	        instrument # 		   		-
+  0xD0	        Channel Pressure 	1 	        pressure   				-
+  0xE0	        Pitch bend 	        2 	        lsb (7 bits) 	msb (7 bits)		-
+  0xF0	        (non-musical commands)								-
+
+
+Additional Notes:
+
+ The joystick api maps axes values to a int16_t (positive and negative) range. While midi data bytes range from 0x00 to 0x7F.
+ So we're mapping the axis values to uint32_t and then to the midi data range (0x00 - 0x7F), thus a axis value of 0x00 is a midi
+ value of 0x40. An axis value of 0x00 occures when the axis controler is at center position.
+
+ Buttons emit midi values of 0x7F when pressed and 0x00 when released, so their usefullness is subpar as for example
+ mapping a button to Note-on would make not much sense.
+	   
