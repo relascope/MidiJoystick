@@ -41,6 +41,7 @@
 | PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) | 0x00 - 0x7F |
 |       |                                                                                                                                                       |             |
 
+ see [[./input.conf][supplied configuration file]] for an example 
 
 * MidiCommands (general)
 
