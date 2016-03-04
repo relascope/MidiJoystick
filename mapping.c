@@ -26,7 +26,7 @@ static long scale_to_positive_axis(long val)
 int get_midi_msg(struct js_event* ev, struct input_conf* input_map, size_t input_map_s, struct midi_msg* midi)
 {
      struct input_conf* im = NULL;
-     int16_t axis = 0;
+     int32_t axis = 0;
      uint8_t midi_val = 0;
      
      if (ev->type & JS_EVENT_INIT)
@@ -42,8 +42,20 @@ int get_midi_msg(struct js_event* ev, struct input_conf* input_map, size_t input
 		  ev->number);
 	  return -1;
      }
+
+
+     /* do nothing if value is same */
+     if (ev->value == im->last_value) {
+	  return -1;
+     }
+     im->last_value = ev->value;
+     
      axis = ev->value;
 
+
+
+     
+     
      /* transpose buttons to axis values */
      if (ev->type == JS_EVENT_BUTTON) {
 	  switch (axis) {
@@ -67,12 +79,7 @@ int get_midi_msg(struct js_event* ev, struct input_conf* input_map, size_t input
      /* scale to positive range */
      axis = scale_to_positive_axis(axis);
 
-     /* do nothing if value is same */
-     if (axis == im->last_value) {
-	  return -1;
-     }
-     im->last_value = axis;
-     
+
      /* pitchbend is special */
      if (im->cmd == midi_command_pitch_bend) {
 	  uint8_t lsb, msb;
