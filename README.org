@@ -1,4 +1,4 @@
-** Midijoystickh
+** Midijoystick
 
 
  MidiJoystick is a JackClient which lets you use your joystick as a midicontroller.
@@ -22,7 +22,7 @@
 
  Currently joystick device file and configuration is hardcoded as:
 
- | file          | path           |
+ | input file    | path           |
  |---------------+----------------|
  | joystick      | /dev/input/js0 |
  | configuration | ./input.conf   |
@@ -46,10 +46,11 @@
 
  
  List of Midi Commands and their implementation status.
- [[http://nickfever.com/music/midi-cc-list][List of Continous Controller IDs]]
+
+ See also this  [[http://nickfever.com/music/midi-cc-list][List of Continous Controller IDs]]
 
 
- Notes triggered with command 0x90 (Note-on) are not released.
+ Warning: Notes triggered with command 0x90 (Note-on) are not released.
  
 
  | Command | Meaning                | # parameters | param 1      | param 2          | configuration param                                    | implemented |
@@ -66,9 +67,9 @@
 
 * To Implement
 
-* TODO SysEx messages support
-* TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
-* TODO allow to give joystick / configuration as commandline arguments
+- TODO SysEx messages support
+- TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
+- TODO allow to give joystick / configuration as commandline arguments
 
 
 
