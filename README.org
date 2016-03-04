@@ -126,7 +126,7 @@
  |-------------+--------------------------------------------------------------+--------+----------------+---------------|
  |        0x78 | Mutes all sounding notes (ignore sustain / release)          |        | *              | *             |
  |        0x79 | Resets all controllers to default                            |        | *              | *             |
- |        0x7A | Local On/Off                                                 |        | *              | *             |
+ |        0x7A | Local On/Off                                                 |*       | *              | *             |
  |        0x7B | Mutes all sounding notes (respects sustain / release)        |        | *              | *             |
  |        0x7C | Omni Mode OFF                                                |        | *              | *             |
  |        0x7D | Omni Mode On                                                 |        | *              | *             |
