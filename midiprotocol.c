@@ -101,8 +101,30 @@ int create_midi_note_on(uint8_t channel, uint8_t note, uint8_t velocity, struct 
      return 0;
 }
 
+#define CHANNEL_MODE_MUTE_1 0x78
+#define CHANNEL_MODE_RESET 0x79
+#define CHANNEL_MODE_LOCAL 0x7A
+#define CHANNEL_MODE_MUTE_2 0x7B
+#define CHANNEL_MODE_OMNI_ON 0x7C
+#define CHANNEL_MODE_OMNI_OFF 0x7D
+#define CHANNEL_MODE_MONO 0x7E
+#define CHANNEL_MODE_POLY 0x7F
+
 int create_midi_cc(uint8_t channel, uint8_t cc_id, uint8_t cc_val, struct midi_msg* result)
 {
+     switch (cc_id) {
+	  /* these Channel Mode messages have 0x00 as their parameter */
+     case (CHANNEL_MODE_MUTE_1):
+     case (CHANNEL_MODE_MUTE_2):
+     case (CHANNEL_MODE_OMNI_OFF):
+     case (CHANNEL_MODE_OMNI_ON):
+     case (CHANNEL_MODE_RESET):
+	  cc_val = 0x00;
+	  break;
+     default:
+	  break;
+     }
+
      if (!(result = build_3_byte_message(midi_command_cc, channel, cc_id, cc_val, result)))
 	  return -1;
      return 0;

@@ -89,58 +89,58 @@
 
  Channel Mode Messages are not yet supported.
 
- |          ID | comment                                                      | switch | "Channel Mode" | not supported |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- |        0x00 | Bank Select                                                  |        |                |               |
- |        0x01 | Modulation                                                   |        |                |               |
- |        0x02 | Breath Controller                                            |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- |        0x04 | Foot Controller                                              |        |                |               |
- |        0x05 | Portamento Time                                              |        |                |               |
- |        0x06 | Data Entry MSB (controls values for [N]RPN parameters)       |        |                |               |
- |        0x07 | Volume (Channel)                                             |        |                |               |
- |        0x08 | Balance (0x00 = hard left, 0x40 = center, 0x7F = hard right) |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- |        0x0A | Pan (0x00 = hard left, 0x40 = center, 0x7F = hard right)     |        |                |               |
- |        0x0B | Expression                                                   |        |                |               |
- |        0x0C | Effect Controller 1                                          |        |                |               |
- |        0x0D | Effect Controller 2                                          |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- | 0x10 - 0x13 | General Purpose                                              |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- | 0x20 - 0x3F | Controller 0 - 31 LSB (fine tune CC 0x00 - 0x1F)             |        |                |               |
- |        0x40 | Damper/Sustain Pedal (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x41 | Portamento           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x42 | Sostenuto            (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x43 | Soft Pedal           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x44 | Legato Foot Switch   (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x45 | Hold 2                                                       |        |                |               |
- |        0x46 | Sound Controller 1 (default = variation)                     |        |                |               |
- |        0x47 | Sound Controller 2 (default = VCF resonance)                 |        |                |               |
- |        0x48 | Sound Controller 3 (default = VCA release time)              |        |                |               |
- |        0x49 | Sound Controller 4 (default = attack                         |        |                |               |
- |        0x4A | Sound Controller 5 (default = VCF cutoff)                    |        |                |               |
- | 0x4B - 0x4F | Sound Controller 6 - 10  generic                             |        |                |               |
- | 0x50 - 0x53 | Generic Switch       (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |               |
- |        0x54 | Portamento amount                                            |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- | 0x5B - 0x5F | Effect Depth 1 - 5                                           |        |                |               |
- |        0x60 | Increment Data (for [N]RPN messages)                         |        |                |               |
- |        0x61 | Decrement Data (for [N]RPN messages                          |        |                |               |
- |        0x62 | Selects LSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |               |
- |        0x63 | Selects MSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |               |
- |        0x64 | Selects LSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |               |
- |        0x65 | Selects MSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |               |
- |-------------+--------------------------------------------------------------+--------+----------------+---------------|
- |        0x78 | Mutes all sounding notes (ignore sustain / release)          |        | *              | *             |
- |        0x79 | Resets all controllers to default                            |        | *              | *             |
- |        0x7A | Local On/Off                                                 |*       | *              | *             |
- |        0x7B | Mutes all sounding notes (respects sustain / release)        |        | *              | *             |
- |        0x7C | Omni Mode OFF                                                |        | *              | *             |
- |        0x7D | Omni Mode On                                                 |        | *              | *             |
- |        0x7E | Mono Mode                                                    |        | *              | *             |
- |        0x7F | Poly Mode                                                    |        | *              | *             |
+ |          ID | comment                                                      | switch | "Channel Mode" |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |        0x00 | Bank Select                                                  |        |                |
+ |        0x01 | Modulation                                                   |        |                |
+ |        0x02 | Breath Controller                                            |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |        0x04 | Foot Controller                                              |        |                |
+ |        0x05 | Portamento Time                                              |        |                |
+ |        0x06 | Data Entry MSB (controls values for [N]RPN parameters)       |        |                |
+ |        0x07 | Volume (Channel)                                             |        |                |
+ |        0x08 | Balance (0x00 = hard left, 0x40 = center, 0x7F = hard right) |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |        0x0A | Pan (0x00 = hard left, 0x40 = center, 0x7F = hard right)     |        |                |
+ |        0x0B | Expression                                                   |        |                |
+ |        0x0C | Effect Controller 1                                          |        |                |
+ |        0x0D | Effect Controller 2                                          |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ | 0x10 - 0x13 | General Purpose                                              |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ | 0x20 - 0x3F | Controller 0 - 31 LSB (fine tune CC 0x00 - 0x1F)             |        |                |
+ |        0x40 | Damper/Sustain Pedal (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x41 | Portamento           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x42 | Sostenuto            (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x43 | Soft Pedal           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x44 | Legato Foot Switch   (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x45 | Hold 2                                                       |        |                |
+ |        0x46 | Sound Controller 1 (default = variation)                     |        |                |
+ |        0x47 | Sound Controller 2 (default = VCF resonance)                 |        |                |
+ |        0x48 | Sound Controller 3 (default = VCA release time)              |        |                |
+ |        0x49 | Sound Controller 4 (default = attack                         |        |                |
+ |        0x4A | Sound Controller 5 (default = VCF cutoff)                    |        |                |
+ | 0x4B - 0x4F | Sound Controller 6 - 10  generic                             |        |                |
+ | 0x50 - 0x53 | Generic Switch       (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x54 | Portamento amount                                            |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ | 0x5B - 0x5F | Effect Depth 1 - 5                                           |        |                |
+ |        0x60 | Increment Data (for [N]RPN messages)                         |        |                |
+ |        0x61 | Decrement Data (for [N]RPN messages                          |        |                |
+ |        0x62 | Selects LSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x63 | Selects MSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x64 | Selects LSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x65 | Selects MSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |        0x78 | Mutes all sounding notes (ignore sustain / release)          |        | *              |
+ |        0x79 | Resets all controllers to default                            |        | *              |
+ |        0x7A | Local On/Off                                                 | *      | *              |
+ |        0x7B | Mutes all sounding notes (respects sustain / release)        |        | *              |
+ |        0x7C | Omni Mode OFF                                                |        | *              |
+ |        0x7D | Omni Mode On                                                 |        | *              |
+ |        0x7E | Mono Mode                                                    |        | *              |
+ |        0x7F | Poly Mode                                                    |        | *              |
 
  Undefined MIDI CCs:
 
@@ -203,7 +203,6 @@
 
 ** TODOs
 
-- TODO Support Channel Mode Messages fully
 - TODO Support System Realtime Messages (Start, Stop, Reset )
 - TODO SysEx messages support (eg: support bigger parameters)
 - TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
