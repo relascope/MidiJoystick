@@ -7,7 +7,7 @@
  
  I admit not every configuration is usefull. But here are some ideas how to configure your joystick:
  * map all axes to Pitch Bend and Continous Controller
- * map your buttons to different Patch Change commands
+ * map your buttons to some of the generic switches (see CC IDs)
 
  MidiJoystick uses a configuration file to read your input mapping, syntax is described further down.
  You'll need to know the index of each of your inputs (axes and buttons) which you can test with 
@@ -77,6 +77,15 @@
 
  See your synths manual for specific implementation details.
  CC IDs which are marked as "switch" are best mapped to buttons.
+ 
+ Currently not all mappings are usefull, due to the fact that Commands can only take one parameter.
+
+ e.g.: 
+
+ - Mapping 0x00 to an axis would make it hard to select a bank
+ - Mapping 0x00 to an button would switch between bank 0x7F on press and 0x00 on release
+ - Mapping 0x08 could be usefull to map to a axis but not to a button
+ - etc...
 
  Channel Mode Messages are not yet supported.
 
