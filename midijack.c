@@ -51,7 +51,6 @@ int process (jack_nframes_t nframes, void *arg)
      void* port_buf = jack_port_get_buffer(output_port, nframes);
      struct midi_msg midi;
      jack_nframes_t frame_idx;
-     jack_midi_data_t midi_data[MIDI_MAX_LENGTH];
      int data_idx;
 
 
@@ -64,6 +63,9 @@ int process (jack_nframes_t nframes, void *arg)
 	       /* unable to get full midi message -> skip */
 	       continue;
 	  }
+	  
+	  jack_midi_data_t midi_data[midi.size];
+	  
 	  for (data_idx = 0; data_idx < midi.size; ++data_idx) {
 	       midi_data[data_idx] = midi.midi_buf[data_idx];
 	  }
