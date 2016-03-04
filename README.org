@@ -160,6 +160,7 @@
 
 ** TODOs
 
+- TODO Support Channel Mode Messages fully
 - TODO SysEx messages support
 - TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
 - TODO allow to give joystick / configuration as commandline arguments
