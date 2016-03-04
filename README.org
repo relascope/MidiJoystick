@@ -1,7 +1,7 @@
 ** Midijoystick
 
 
- MidiJoystick is a JackClient which lets you use your joystick as a midicontroller.
+ MidiJoystick is a jackaudio client for Linux (and maybe other unixlikes) which lets you use your joystick as a midicontroller.
 
  You can map all axes and buttons to diffrent midi commands and channels.
  
@@ -66,11 +66,14 @@
  |    0xF0 | (non-musical commands) |              |              |                  |                                                        | no          |
 
 
-* To Implement
+* TODOs
 
 - TODO SysEx messages support
 - TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
 - TODO allow to give joystick / configuration as commandline arguments
+- TODO allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)
+- TODO allow to configure deadzone per axis (instead of hardcoded -/+4000)
+- TODO allow to configure max values per axis (e.g. clip on -/+6000)
 
 
 
