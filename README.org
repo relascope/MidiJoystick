@@ -74,6 +74,7 @@
 - TODO allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)
 - TODO allow to configure deadzone per axis (instead of hardcoded -/+4000)
 - TODO allow to configure max values per axis (e.g. clip on -/+6000)
+- TODO _maybe_ find a way to configure buttons as mod keys for axis events (e.g. axis mapped to Pitch Bend, hold a button and axis now emits CC )
 
 
 
