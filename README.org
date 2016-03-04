@@ -1,4 +1,4 @@
-** Midijoystick
+* Midijoystick
 
 
  MidiJoystick is a jackaudio client for Linux (and maybe other unixlikes) which lets you use your joystick as a midicontroller.
@@ -27,7 +27,7 @@
  | joystick      | /dev/input/js0 |
  | configuration | ./input.conf   |
 
-* Configuration Syntax
+** Configuration Syntax
 
 
 ~((t i) CMD (CH PARAM))~
@@ -43,7 +43,7 @@
 
  see [[./input.conf][supplied configuration file]] for an example 
 
-* MidiCommands (general)
+** MidiCommands (general)
 
  
  List of Midi Commands and their implementation status.
@@ -66,7 +66,7 @@
  |    0xF0 | (non-musical commands) |              |              |                  |                                                        | no          |
 
 
-* TODOs
+** TODOs
 
 - TODO SysEx messages support
 - TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
@@ -78,7 +78,7 @@
 
 
 
-* How to build
+** How to build
 
  ~$ make all~
 
@@ -100,7 +100,7 @@
  The output files of Ragel are included in this repository, so you shouldn't need it.
  
 
-* Additional Notes
+** Additional Notes
 
  The joystick api maps axes values to a int16_t (positive and negative) range. While midi data bytes range from 0x00 to 0x7F.
  So we're mapping the axis values to uint16_t and then to the midi data range (0x00 - 0x7F), thus a axis value of 0x00 is a midi
@@ -110,7 +110,7 @@
  mapping a button to Note-on would make not much sense.
  
 
-* Source Code Map
+** Source Code Map
 
   currently midijoystick.o gets created by copying main.o , that's ugly and i should change that 
 
