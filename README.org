@@ -183,6 +183,60 @@
  | 0xF0 | ID | data (0x00 - 0x7F) | 0xF7 |
 
 
+***** MIDI Universal System Exclusive Messages
+
+ Format:
+ ~0xF0 0x7E <Device-ID> <Sub-ID#1> [<Sub-ID#2> [<parameters>]] 0xF7~
+
+***** Midi Real-Time Universal System Exclusive Messages [ Midi Machine Control (MMC)]
+
+ 
+
+ Format:
+ ~0xF0 0x7F <Device-ID> <Sub-ID#1> [<Sub-ID#2> [<parameters>]] 0xF7~
+      
+
+ Example:
+
+ ~0xF0 0x7F 0x7F 0x06 0x1 0xF7~    send play to all devices
+
+ | token      | comment                                             |
+ |------------+-----------------------------------------------------|
+ | Device-ID  | MMC device's ID# (0x00 - 0x7F ; 0x7F = all devices) |
+ | Sub-ID#1   | Commandgroup                                        |
+ | Sub-ID#2   | exact Command                                       |
+ | parameters | parameters for exact command                        |
+
+ | Sub-ID#1 | comment                       | MMC related |
+ |----------+-------------------------------+-------------|
+ |     0x01 | Long Form MTC                 |             |
+ |     0x02 | Midi Show Control             |             |
+ |     0x03 | Notation Informataion         |             |
+ |     0x04 | Device Control                |             |
+ |     0x05 | Real Time MTC Cueing          |             |
+ |     0x06 | MIDI Machine Control Command  | *           |
+ |     0x07 | Midi Machine Control Response | *           |
+ |     0x08 | Single Note Retune            |             |
+      
+ | Sub-ID#1 | Sub-ID#2 | comment                                           | parameters                                                        |
+ |----------+----------+---------------------------------------------------+-------------------------------------------------------------------|
+ |     0x06 |     0x01 | Stop                                              |                                                                   |
+ |          |     0x02 | Play                                              |                                                                   |
+ |          |     0x03 | Deferred Play (play after no longer busy)         |                                                                   |
+ |          |     0x04 | Fast Forward                                      |                                                                   |
+ |          |     0x05 | Rewind                                            |                                                                   |
+ |          |     0x06 | Record Strobe (AKA Punch In)                      |                                                                   |
+ |          |     0x07 | Record Exit (AKA Punch Out)                       |                                                                   |
+ |          |     0x08 | Record Pause                                      |                                                                   |
+ |          |     0x0A | Eject (disengage media container from MMC device) |                                                                   |
+ |          |     0x0B | Chase                                             |                                                                   |
+ |          |     0x0D | MMC Reset (to default/startup state)              |                                                                   |
+ |          |     0x40 | Write (AKA Record ready, AKA Arm Tracks)          | <length1> 0x4F <length2> <track-bitmap-type>                      |
+ |          |     0x44 | GoTo (AKA Locate)                                 | <length>=0x06 01 <hours> <minutes> <seconds> <frames> <subframes> |
+ |          |     0x47 | Shuttle                                           | <length>=0x03 <sh> <sm> <sl> (MIDI Standard Speed codes)          |
+ |          |          |                                                   |                                                                   |
+ |     0x07 |     0xXX | response state                                    | values detailing response state                                   |
+
 ***** Roland:
  
  |    0 |              1 |         2 |        3 |                            4 | 5 ...7     | 8 ... n -2                   | n -1     |    n |
