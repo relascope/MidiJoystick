@@ -49,6 +49,7 @@
  List of Midi Commands and their implementation status.
 
  Sources:
+ - [[http://www.indiana.edu/~emusic/etext/MIDI/chapter3_MIDI.shtml][Introduction to Computer Music: Volume One ; Chapter 3: Midi]]
  - [[http://nickfever.com/music/midi-cc-list][List of Continous Controller IDs]]
  - [[www.2writers.com/eddie/MidiGlossary.htm][MIDI Glossary]]
 
