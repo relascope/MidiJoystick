@@ -1,16 +1,24 @@
-** MidiJoystick
+** Midijoystickh
 
 
  MidiJoystick is a JackClient which lets you use your joystick as a midicontroller.
+
  You can map all axes and buttons to diffrent midi commands and channels.
- Main usage would be as using it as Continuous Controller (CMD: 0xB0)
- and Pitch Bend (CMD: 0xE0).
+ 
+ I admit not every configuration is usefull. But here are some ideas how to configure your joystick:
+ * map all axes to Pitch Bend and Continous Controller
+ * map your buttons to different Patch Change commands
 
- Use 'jstest' to workout the input indices of your joystick.
+ MidiJoystick uses a configuration file to read your input mapping, syntax is described further down.
+ You'll need to know the index of each of your inputs (axes and buttons) which you can test with 
+ the program [[http://linux.die.net/man/1/jstest][jstest]].
+ 
+ On start 'midijoystick' will parse your configuration file, telling you about problematic lines 
+ and the mapping between midi command and input.
 
- On start 'midijoystick' will list your current configuration. Or you can use
- 'explain_config' to check your configuration.
-
+ When you just want to check or get your current configuration file explained, you can use the 
+ included tool 'explain_config'.
+  
 
  Currently joystick device file and configuration is hardcoded as:
 
@@ -22,47 +30,71 @@
 * Configuration Syntax
 
 
-((t i) CMD (CH PARAM))
+~((t i) CMD (CH PARAM))~
 
 | token | note                                                                                                                                                  | values      |
 |-------+-------------------------------------------------------------------------------------------------------------------------------------------------------+-------------|
-| t     | specifies input type -> axis (a) or button (b)                                                                                                        | a, A, b, B  |
-| i     | specifies index of the input type (as decimal)                                                                                                        | 0 - 9       |
+| t     | specifies input type: a or A for axis; b or B for buttons                                                                                             | [aAbB]      |
+| i     | specifies index of the input type (as decimal)                                                                                                        | [0-9]+      |
 | CMD   | Midi command identifier as two digit hex number (see table below)                                                                                     | 0x80 - 0xF0 |
 | CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                           | 0x00 - 0x0F |
 | PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) | 0x00 - 0x7F |
 |       |                                                                                                                                                       |             |
 
 
-* Working Midi Commands
+* MidiCommands (general)
+
+ 
+ List of Midi Commands and their implementation status.
+ [[http://nickfever.com/music/midi-cc-list][List of Continous Controller IDs]]
 
 
- |  CMD | Name                 | Notes                                                                                                                                                                                                          |
- |------|----------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
- | 0x80 | Note On              | Param option sets reference note for the 'zero' position of a control eg: ((a 1) 0x80 (0x00 0x45)) -> when axis 1 is in zero postion, C4 is played on channel 1 WARNING: Note-off is currently not implemented |
- | 0xB0 | Continuous Controler | Param option sets the controller number                                                                                                                                                                        |
- | 0xE0 | Pitch Bend           | No param option is used                                                                                                                                                                                        |
- | 0xC0 | Patch Change         | Param option specifies patch number                                                                                                                                                                            |
- | 0xD0 | Channel Pressure     | No param option is used                                                                                                                                                                                        |
- |      |                      |                                                                                                                                                                                                                | 
+ Notes triggered with command 0x90 (Note-on) are not released.
+ 
+
+ | Command | Meaning                | # parameters | param 1      | param 2          | configuration param                                    | implemented |
+ |---------+------------------------+--------------+--------------+------------------+--------------------------------------------------------+-------------|
+ |    0x80 | Note-off               |            2 | note         | velocity         |                                                        | no          |
+ |    0x90 | Note-on                |            2 | note         | velocity         | note for input center position (defaults to note 0x40) | poorly      |
+ |    0xA0 | Aftertouch             |            2 | note         | touch            |                                                        | no          |
+ |    0xB0 | Continous Controller   |            2 | controller # | controller value | controller #                                           | yes         |
+ |    0xC0 | Patch Change           |            1 | instrument # |                  | patch number                                           | yes         |
+ |    0xD0 | Channel Pressure       |            1 | pressure     |                  | not used                                               | yes         |
+ |    0xE0 | Pitch Bend             |            2 | lsb (7bits)  | msb (7bits)      | not used                                               | yes         |
+ |    0xF0 | (non-musical commands) |              |              |                  |                                                        | no          |
 
 
-MidiCommands
-------------
+* To Implement
 
-  Command 	Meaning 	        # parameters 	param 1 	param 2			config
-  0x80   	Note-off 	        2 	        key 	        velocity		note offset reference
-  0x90	        Note-on 	        2 	        key 	        veolcity		note offset reference
-  0xA0	        Aftertouch 	        2 	        key 	        touch			-
-  0xB0	        Continuous controller 	2 	        controller # 	controller value	controller #
-  0xC0	        Patch change 	        1 	        instrument # 		   		-
-  0xD0	        Channel Pressure 	1 	        pressure   				-
-  0xE0	        Pitch bend 	        2 	        lsb (7 bits) 	msb (7 bits)		-
-  0xF0	        (non-musical commands)								-
+* TODO SysEx messages support
+* TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
+* TODO allow to give joystick / configuration as commandline arguments
 
 
-Additional Notes
-----------------
+
+* How to build
+
+ ~$ make all~
+
+ will build:
+ - midijoystick:    main program
+ - explain_config:  tool for configuration checking
+ - config.pdf:      nice picture of configuration parser statemachine
+
+ Dependencies:
+ - jackaudioserver
+ - ragel
+ 
+ Optional dependencies:
+ - graphwiz
+ 
+ 
+ Configuration parsing is made with [[http://www.colm.net/open-source/ragel/][Ragel]] (a state machine compiler).
+ Ragel compiles to a regular c source code file but can generate *.dot files for [[http://www.graphviz.org/][Graphviz]] too.
+ The output files of Ragel are included in this repository, so you shouldn't need it.
+ 
+
+* Additional Notes
 
  The joystick api maps axes values to a int16_t (positive and negative) range. While midi data bytes range from 0x00 to 0x7F.
  So we're mapping the axis values to uint16_t and then to the midi data range (0x00 - 0x7F), thus a axis value of 0x00 is a midi
@@ -70,4 +102,19 @@ Additional Notes
 
  Buttons emit midi values of 0x7F when pressed and 0x00 when released, so their usefullness is subpar as for example
  mapping a button to Note-on would make not much sense.
-	   
+ 
+
+* Source Code Map
+
+  currently midijoystick.c gets created by copying main.c , that's ugly and i should change that 
+
+ | file(s)                 | comments                                               |
+ |-------------------------+--------------------------------------------------------|
+ | explain_config.c        | tool to check configuration                            |
+ | midijoystick.c / main.c | main program                                           |
+ | config.{rl,c,dot,pdf}   | all about configuration file parsing                   |
+ | joystick.{c,h}          | for talking with the joystick device file              |
+ | midijack.{c,h}          | for talking with jackaudio server                      |
+ | midiprotocol.{c,h}      | this knows how midi msgs look like on the nibble level |
+ | mapping.{c,h}           | glue code between midiprotocol and config              |
+
