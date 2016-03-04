@@ -70,10 +70,6 @@ static inline uint8_t build_cmd_byte(enum midi_commands cmd, uint8_t channel)
 static inline struct midi_msg* build_3_byte_message(enum midi_commands cmd, uint8_t channel, uint8_t param1,
 					    uint8_t param2, struct midi_msg* result)
 {
-/*
-     if (!(result = calloc(3, sizeof(uint8_t))))
-	  return NULL;
-*/
      result->midi_buf[0] = build_cmd_byte(cmd, channel);
      result->midi_buf[1] = MIDI_DATA_MAX & param1;
      result->midi_buf[2] = MIDI_DATA_MAX & param2;
@@ -84,10 +80,6 @@ static inline struct midi_msg* build_3_byte_message(enum midi_commands cmd, uint
 static inline struct midi_msg* build_2_byte_message(enum midi_commands cmd, uint8_t channel, uint8_t param1,
 					    struct midi_msg* result)
 {
-/*
-     if (!(result = calloc(2, sizeof(uint8_t))))
-	  return NULL;
-*/
      result->midi_buf[0] = build_cmd_byte(cmd, channel);
      result->midi_buf[1] = MIDI_DATA_MAX & param1;
      result->size = 2;
