@@ -87,7 +87,6 @@
  - Mapping 0x08 could be usefull to map to a axis but not to a button
  - etc...
 
- Channel Mode Messages are not yet supported.
 
  |          ID | comment                                                      | switch | "Channel Mode" |
  |-------------+--------------------------------------------------------------+--------+----------------|
