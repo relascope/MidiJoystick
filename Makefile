@@ -1,6 +1,6 @@
 CC = cc
 #CFLAGS += -std=c11 -D_XOPEN_SOURCE=600 -pedantic -Wall -W -g
-CFLAGS += -std=c11 -D_XOPEN_SOURCE=600 -Wall -g -O0
+CFLAGS += -std=c11 -D_XOPEN_SOURCE=600 -Wall -g -O0 -Wpadded
 LDFLAGS = $(shell pkg-config --cflags --libs jack) -lm
 #LDFLAGS = -lm
 
