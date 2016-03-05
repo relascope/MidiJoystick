@@ -1,0 +1,235 @@
+* MIDI Compendium
+
+ This section tries to give a overview of available MIDI command types.
+
+ Not every command listed here is implemented, please check the section "Implemented Midi Commands" above for a updated list.
+
+ 
+ An overview of Midi command types
+
+
+ | Command | Meaning                | # parameters | param 1      | param 2          | comments                            |
+ |---------+------------------------+--------------+--------------+------------------+-------------------------------------|
+ |    0x80 | Note-off               |            2 | note         | velocity         |                                     |
+ |    0x90 | Note-on                |            2 | note         | velocity         |                                     |
+ |    0xA0 | Aftertouch             |            2 | note         | touch            |                                     |
+ |    0xB0 | Continous Controller   |            2 | controller # | controller value | see table of CC IDs below           |
+ |    0xC0 | Patch Change           |            1 | instrument # |                  |                                     |
+ |    0xD0 | Channel Pressure       |            1 | pressure     |                  |                                     |
+ |    0xE0 | Pitch Bend             |            2 | lsb (7bits)  | msb (7bits)      |                                     |
+ |    0xF0 | (non-musical commands) |              |              |                  | see section "System Commands" below |
+ |         |                        |              |              |                  |                                     |
+
+
+** MIDI Information Sources
+ 
+ The internet is full with information on Midi.
+ 
+ If you have no idea what Midi is try this link:  [[http://www.indiana.edu/~emusic/etext/MIDI/chapter3_MIDI.shtml][Introduction to Computer Music: Volume One ; Chapter 3: Midi]]
+
+ More links:
+ - [[http://nickfever.com/music/midi-cc-list][List of Continous Controller IDs]]
+ - [[www.2writers.com/eddie/MidiGlossary.htm][MIDI Glossary]]
+
+
+** Continous Controller (CC) IDs
+
+ See your synths manual for specific implementation details.
+ CC IDs which are marked as "switch" are best mapped to buttons.
+ 
+ If you feel overwhelmed by the options try CC 0x01 first. Most synths will respond to this.
+ Here an example, how you could do it:
+
+#+BEGIN_SRC lisp
+ # Map axis 1 to CC 0x01 (Modulation) on channel 1
+ ((a 1) (0xB0 0x00 0x01);
+#+END_SRC
+
+ 
+  Currently not all mappings are usefull, due to the fact that commands can only take one parameter.
+
+ e.g.: 
+
+ - Mapping 0x00 to an axis would make it hard to select a bank
+ - Mapping 0x00 to an button would switch between bank 0x7F on press and 0x00 on release
+ - So using 0x00 makes not much sense at all in the current implementation... i'm sorry
+ - Mapping 0x08 could be usefull to map to a axis but not as much when mapped to a button
+ - etc...
+
+
+ 
+
+
+ |          ID | comment                                                      | switch | "Channel Mode" |
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |-------------+--------------------------------------------------------------+--------+----------------|
+ |        0x00 | Bank Select                                                  |        |                |
+ |        0x01 | Modulation                                                   |        |                |
+ |        0x02 | Breath Controller                                            |        |                |
+ |           - |                                                              |        |                |
+ |        0x04 | Foot Controller                                              |        |                |
+ |        0x05 | Portamento Time                                              |        |                |
+ |        0x06 | Data Entry MSB (controls values for [N]RPN parameters)       |        |                |
+ |        0x07 | Volume (Channel)                                             |        |                |
+ |        0x08 | Balance (0x00 = hard left, 0x40 = center, 0x7F = hard right) |        |                |
+ |           - |                                                              |        |                |
+ |        0x0A | Pan (0x00 = hard left, 0x40 = center, 0x7F = hard right)     |        |                |
+ |        0x0B | Expression                                                   |        |                |
+ |        0x0C | Effect Controller 1                                          |        |                |
+ |        0x0D | Effect Controller 2                                          |        |                |
+ |           - |                                                              |        |                |
+ | 0x10 - 0x13 | General Purpose                                              |        |                |
+ |           - |                                                              |        |                |
+ | 0x20 - 0x3F | Controller 0 - 31 LSB (fine tune CC 0x00 - 0x1F)             |        |                |
+ |        0x40 | Damper/Sustain Pedal (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x41 | Portamento           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x42 | Sostenuto            (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x43 | Soft Pedal           (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x44 | Legato Foot Switch   (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x45 | Hold 2                                                       |        |                |
+ |        0x46 | Sound Controller 1 (default = variation)                     |        |                |
+ |        0x47 | Sound Controller 2 (default = VCF resonance)                 |        |                |
+ |        0x48 | Sound Controller 3 (default = VCA release time)              |        |                |
+ |        0x49 | Sound Controller 4 (default = attack                         |        |                |
+ |        0x4A | Sound Controller 5 (default = VCF cutoff)                    |        |                |
+ | 0x4B - 0x4F | Sound Controller 6 - 10  generic                             |        |                |
+ | 0x50 - 0x53 | Generic Switch       (0x00 - 0x3F: OFF; 0x40 - 0x7F: ON)     | *      |                |
+ |        0x54 | Portamento amount                                            |        |                |
+ |           - |                                                              |        |                |
+ | 0x5B - 0x5F | Effect Depth 1 - 5                                           |        |                |
+ |        0x60 | Increment Data (for [N]RPN messages)                         |        |                |
+ |        0x61 | Decrement Data (for [N]RPN messages                          |        |                |
+ |        0x62 | Selects LSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x63 | Selects MSB NPRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x64 | Selects LSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |        0x65 | Selects MSB  PRN parameter (0x06, 0x26, 0x60, 0x61)          |        |                |
+ |           - |                                                              |        |                |
+ |        0x78 | Mutes all sounding notes (ignore sustain / release)          |        | *              |
+ |        0x79 | Resets all controllers to default                            |        | *              |
+ |        0x7A | Local On/Off                                                 | *      | *              |
+ |        0x7B | Mutes all sounding notes (respects sustain / release)        |        | *              |
+ |        0x7C | Omni Mode OFF                                                |        | *              |
+ |        0x7D | Omni Mode On                                                 |        | *              |
+ |        0x7E | Mono Mode                                                    |        | *              |
+ |        0x7F | Poly Mode                                                    |        | *              |
+
+ Undefined MIDI CCs:
+
+ These CC IDs are not defined, but may be used by your synth. See your manual as always.
+ 
+ 0x03; 0x09; 0x0E; 0x0F; 0x14 - 0x1F; 0x55 - 0x5C; 0x66 - 0x77;
+ 
+
+** System Commands
+
+*** System Common Commands
+
+ Currently there are no plans to support System Common Commands (not including 0xF7 aka EOX aka End of system exclusive message).
+
+*** System Realtime Commands (NOT YET SUPPORTED)
+
+ |  CMD | Description                                 | gona implement? |
+ |------+---------------------------------------------+-----------------|
+ | 0xF8 | Timing Clock                                | nope            |
+ | 0xFA | Start (from beginning of song)              | yup             |
+ | 0xFB | Continue (from current position)            | yup             |
+ | 0xFC | Stop                                        | yup             |
+ | 0xFE | Active Sensing                              | nope            |
+ | 0xFF | Systen Reset (back to state after power on) | yup             |
+ 
+ configuration example:
+
+ System reset on button 1
+ ~((b 1) (0xFF))~
+
+*** SysEx Commands (NOT YET SUPPORTED)
+
+ Structure of System Exclusive Commands on byte level.
+
+ Please consult your synths manual for more information.
+ 
+**** General Format:
+ 
+ |    0 |  1 | 2 ...n -1          |    n |
+ |------+----+--------------------+------|
+ | 0xF0 | ID | data (0x00 - 0x7F) | 0xF7 |
+
+
+**** MIDI Universal System Exclusive Messages
+
+ Format:
+ ~0xF0 0x7E <Device-ID> <Sub-ID#1> [<Sub-ID#2> [<parameters>]] 0xF7~
+
+**** Midi Real-Time Universal System Exclusive Messages [ Midi Machine Control (MMC)]
+
+ 
+
+ Format:
+ ~0xF0 0x7F <Device-ID> <Sub-ID#1> [<Sub-ID#2> [<parameters>]] 0xF7~
+      
+
+ Example:
+
+ ~0xF0 0x7F 0x7F 0x06 0x1 0xF7~    send play to all devices
+
+ | token      | comment                                             |
+ |------------+-----------------------------------------------------|
+ | Device-ID  | MMC device's ID# (0x00 - 0x7F ; 0x7F = all devices) |
+ | Sub-ID#1   | Commandgroup                                        |
+ | Sub-ID#2   | exact Command                                       |
+ | parameters | parameters for exact command                        |
+ |            |                                                     |
+
+
+
+ | Sub-ID#1 | comment                       | MMC related |
+ |----------+-------------------------------+-------------|
+ |     0x01 | Long Form MTC                 |             |
+ |     0x02 | Midi Show Control             |             |
+ |     0x03 | Notation Informataion         |             |
+ |     0x04 | Device Control                |             |
+ |     0x05 | Real Time MTC Cueing          |             |
+ |     0x06 | MIDI Machine Control Command  | *           |
+ |     0x07 | Midi Machine Control Response | *           |
+ |     0x08 | Single Note Retune            |             |
+ |          |                               |             |
+
+
+      
+ | Sub-ID#1 | Sub-ID#2 | comment                                           | parameters                                                        |
+ |----------+----------+---------------------------------------------------+-------------------------------------------------------------------|
+ |     0x06 |     0x01 | Stop                                              |                                                                   |
+ |          |     0x02 | Play                                              |                                                                   |
+ |          |     0x03 | Deferred Play (play after no longer busy)         |                                                                   |
+ |          |     0x04 | Fast Forward                                      |                                                                   |
+ |          |     0x05 | Rewind                                            |                                                                   |
+ |          |     0x06 | Record Strobe (AKA Punch In)                      |                                                                   |
+ |          |     0x07 | Record Exit (AKA Punch Out)                       |                                                                   |
+ |          |     0x08 | Record Pause                                      |                                                                   |
+ |          |     0x0A | Eject (disengage media container from MMC device) |                                                                   |
+ |          |     0x0B | Chase                                             |                                                                   |
+ |          |     0x0D | MMC Reset (to default/startup state)              |                                                                   |
+ |          |     0x40 | Write (AKA Record ready, AKA Arm Tracks)          | <length1> 0x4F <length2> <track-bitmap-type>                      |
+ |          |     0x44 | GoTo (AKA Locate)                                 | <length>=0x06 01 <hours> <minutes> <seconds> <frames> <subframes> |
+ |          |     0x47 | Shuttle                                           | <length>=0x03 <sh> <sm> <sl> (MIDI Standard Speed codes)          |
+ |          |          |                                                   |                                                                   |
+ |     0x07 |     0xXX | response state                                    | values detailing response state                                   |
+ |          |          |                                                   |                                                                   |
+
+**** Roland:
+ 
+ |    0 |              1 |         2 |        3 |                            4 | 5 ...7     | 8 ... n -2                   | n -1     |    n |
+ |------+----------------+-----------+----------+------------------------------+------------+------------------------------+----------+------|
+ | 0xF0 | manufacture id | device id | model id | 0x12 (send) / 0x11 (receive) | start addr | data (send) / size (receive) | checksum | 0xF7 |
+ |      |                |           |          |                              |            |                              |          |      |
+ 
+ Calculating Roland checksum:
+
+#+BEGIN_SRC python
+  ck_sum = 0
+  for byte in sysex:
+      ck_sum += byte
+      ck_sum = ck_sum % 128
+  ck_sum = 128 - ck_sum
+#+END_SRC
+
