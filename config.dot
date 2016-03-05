@@ -22,12 +22,12 @@ digraph conf_parser {
 	6 -> 6 [ label = "'\\t'..'\\r', SP" ];
 	6 -> 7 [ label = "')'" ];
 	7 -> 7 [ label = "'\\t'..'\\r', SP" ];
-	7 -> 8 [ label = "'0'" ];
-	8 -> 9 [ label = "'X', 'x'" ];
-	9 -> 10 [ label = "'0'..'9', 'A'..'F', 'a'..'f' / capture_cmd" ];
-	10 -> 11 [ label = "'0'" ];
-	11 -> 11 [ label = "'\\t'..'\\r', SP" ];
-	11 -> 12 [ label = "'('" ];
+	7 -> 8 [ label = "'('" ];
+	8 -> 8 [ label = "'\\t'..'\\r', SP" ];
+	8 -> 9 [ label = "'0'" ];
+	9 -> 10 [ label = "'X', 'x'" ];
+	10 -> 11 [ label = "'0'..'9', 'A'..'F', 'a'..'f' / capture_cmd" ];
+	11 -> 12 [ label = "'0'" ];
 	12 -> 12 [ label = "'\\t'..'\\r', SP" ];
 	12 -> 13 [ label = "'0'" ];
 	13 -> 14 [ label = "'X', 'x'" ];
@@ -46,5 +46,5 @@ digraph conf_parser {
 	22 -> 22 [ label = "'\\t'..'\\r', SP" ];
 	ENTRY -> 1 [ label = "IN" ];
 	en_1 -> 1 [ label = "main" ];
-	22 -> eof_22 [ label = "EOF / 67:101" ];
+	22 -> eof_22 [ label = "EOF / 67:102" ];
 }

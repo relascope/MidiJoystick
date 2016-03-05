@@ -64,7 +64,7 @@ static int cs;
      param_val = ([0-7] xdigit);
      param = space* hex_header (param_val  >capture_param);
 	
-     confline = ( open_par open_par id close_par cmd open_par chan (param)? close_par close_par)   %{res = 0;};
+     confline = ( open_par open_par id close_par open_par cmd  chan (param)? close_par close_par)   %{res = 0;};
 
 	
      main := confline;

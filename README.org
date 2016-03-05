@@ -34,7 +34,7 @@
 ** Configuration Syntax
 
 
-~((t i) CMD (CH PARAM));~
+   ~((t i) (CMD CH PARAM));~
 
  Every configuration entry has to be delimited by ';'.
  
@@ -42,8 +42,8 @@
 
 #+BEGIN_SRC lisp
  ((t i) 
-        CMD 
-            (CH PARAM));
+        (CMD 
+             CH PARAM));
 #+END_SRC
 
  Any line containing a '#' is discarded as comment by the configuration parser.
@@ -53,8 +53,8 @@
 #+BEGIN_SRC lisp
  ((t i) 
  # A nice comment 
-        CMD 
-            (CH PARAM));
+        (CMD 
+             CH PARAM));
 #+END_SRC
 
 
@@ -345,4 +345,4 @@
 
 ** License
 
- [[./LICENSE][MIT]]
+   [[./LICENSE][MIT]]
