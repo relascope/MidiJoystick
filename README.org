@@ -96,7 +96,7 @@
 
  For further information see the included [[./midicompendium.org][MIDI Compendium]]
 
-** [[./midicompendium][MIDI Compendium]]
+** [[./midicompendium.org][MIDI Compendium]]
 
 ** TODOs
 
