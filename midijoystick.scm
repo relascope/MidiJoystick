@@ -61,6 +61,21 @@ struct js_event input_event;
 (define close-joystick (c-lambda (int) int "close_joystick"))
 
 
+(define (map-to-range val val-min val-max out-min out-max)
+  (let ((slope (* 1.0 (/ (- out-max out-min) (- val-max val-min)))))
+    (inexact->exact (round (+ out-min (* slope (- val val-min)))))))
+
+
+(define (js-val-to-pos-js-val val)
+  (map-to-range val *AXIS-REAL-MIN* *AXIS-REAL-MAX* *AXIS-POS-MIN* *AXIS-POS-MAX*))
+
+(define (js-val-to-midi val)  
+  (let ((pos-val (js-val-to-pos-js-val val)))
+    (bitwise-and *MIDI-VAL-MAX*  (map-to-range pos-val *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-VAL-MAX*))))
+
+(define *MIDI-VAL-MAX* #x7F)
+(define *MIDI-VAL-MIN* #x00)
+(define *MIDI-Pitch-Bend-MAX* #x3FFF)
 (define *MIDI-CMD-Continus-Controller* #xB0)
 (define *MIDI-CMD-Patch-Change* #xC0)
 (define *MIDI-CMD-Channel-Pressure* #xD0)
@@ -73,22 +88,26 @@ struct js_event input_event;
 	  (else (bitwise-ior (midi-cmd midi-conf) (midi-ch midi-conf)))))
 
   (define (build-msg-input-last midi-conf)
-    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,input-val)))
+    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,(js-val-to-midi input-val))))
 
   (define (build-msg-input-first midi-conf)
-    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,input-val ,@(midi-param midi-conf))))
+    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(js-val-to-midi input-val) ,@(midi-param midi-conf))))
 
   (define (build-msg-no-input midi-conf)
     (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf))))
 
   (define (build-msg-no-param midi-conf)
-    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,input-val)))
+    (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(js-val-to-midi input-val))))
+
+  (define (build-msg-pitch-bend midi-conf)
+    (let ((split-input-val (lambda (input-val) (cons (bitwise-and input-val *MIDI-VAL-MAX*) (cons (bitwise-and (arithmetic-shift input-val -7) *MIDI-VAL-MAX*) '())))))
+      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(split-input-val (map-to-range (js-val-to-pos-js-val input-val) *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-Pitch-Bend-MAX* ))))))
   
   (let ((cmd (midi-cmd midi-conf)))
     (cond ((equal? cmd *MIDI-CMD-Continus-Controller*) (build-msg-input-last midi-conf))
 	  ((equal? cmd *MIDI-CMD-Patch-Change*) (build-msg-no-input midi-conf))
 	  ((equal? cmd *MIDI-CMD-Channel-Pressure*) (build-msg-no-param midi-conf))
-	  ((equal? cmd *MIDI-CMD-Pitch-Bend*) (build-msg-no-param midi-conf))
+	  ((equal? cmd *MIDI-CMD-Pitch-Bend*) (build-msg-pitch-bend midi-conf))
 	  (else (lambda (input-val) '() ))))
 )
 
@@ -141,16 +160,9 @@ struct js_event input_event;
 (define *AXIS-REAL-MAX* 32767)
 (define *AXIS-POS-MAX* #xFFFF)
 (define *AXIS-POS-MIN* #x0000)
-(define *MIDI-VAL-MAX* #x7F)
-(define *MIDI-VAL-MIN* #x00)
 
-(define (js-val-to-midi val)  
-  (define (map-to-range val v-min v-max out-min out-max)
-    (let ((slope (* 1.0 (/ (- out-max out-min) (- v-max v-min)))))
-      (inexact->exact (round (+ out-min (* slope (- val v-min)))))))
-  
-  (let ((pos-val (map-to-range val *AXIS-REAL-MIN* *AXIS-REAL-MAX* *AXIS-POS-MIN* *AXIS-POS-MAX*)))
-    (bitwise-and *MIDI-VAL-MAX*  (map-to-range pos-val *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-VAL-MAX*))))
+
+
 
 
 
@@ -163,7 +175,7 @@ struct js_event input_event;
     (let loop ()
       (let ((ev-res (get-js-event fd-joy)))
 	(if (equal? 0 ev-res)
-	    (let ((msg ((get-msg-by-ev-id config) (js-val-to-midi (js-event-value)))))
+	    (let ((msg ((get-msg-by-ev-id config) (js-event-value))))
 		(send-midi msg (length msg)))
 		    
 	    
