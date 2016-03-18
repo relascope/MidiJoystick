@@ -35,7 +35,9 @@ int SEND_MIDI(___SCMOBJ msg, size_t size) {
 
      ___SCMOBJ lst = msg;
 
-
+     if (size == 0)
+	  return 0;
+     
      memset(&midi, 0, sizeof(midi));
      for (int i=0; i < size && ___PAIRP(lst) && i < MAX_MIDI_MSG; ++i) {
 	  ___SCMOBJ scm_int = ___CAR(lst);

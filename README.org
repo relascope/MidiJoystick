@@ -39,33 +39,44 @@
 
  Configuration entry:
  
-   ~((t i) (CMD CH PARAM));~
+   ~((t i) (CMD CH PARAM))~
 
  Configuration entry with ommitted 'PARAM' (in this case 'PARAM' defaults to 0x00)
 
-   ~((t i) (CMD CH));~
+   ~((t i) (CMD CH))~
 
- Every configuration entry has to be delimited by ';'.
+
  
  A configuration entry can be split to multiple lines:
 
 #+BEGIN_SRC lisp
  ((t i) 
         (CMD 
-             CH PARAM));
+             CH PARAM))
 #+END_SRC
 
- Any line containing a '#' is discarded as comment by the configuration parser.
+ Any line containing a ';' is discarded as comment by the configuration parser.
  Comments have to be on their own line, but can appear in their own line between a configuration entry:
 
 
 #+BEGIN_SRC lisp
  ((t i) 
- # A nice comment 
+ ; A nice comment 
         (CMD 
-             CH PARAM));
+             CH PARAM))
+#+END_SRC
+ 
+ Remember to enclose all your entries with parantheses:
+
+#+BEGIN_SRC lisp
+  (
+    ((t i) (CMD CH PARAM))
+    ((t i) (CMD CH PARAM))
+    ((t i) (CMD CH PARAM))
+  )
 #+END_SRC
 
+ see [[./input.conf][supplied configuration file]] for an example of a complete config file
 
 
 | token | note                                                                                                                                                  | values                |
@@ -75,10 +86,9 @@
 | CMD   | Midi command identifier as two digit hex number (see table below)                                                                                     | 0[xX][89a-fA-F]0      |
 | CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                           | 0[xX]0[0-9a-fA-F]     |
 | PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) | 0[xX][0-7][0-9a-fA-F] |
-| ;     | Configuration entry seperator                                                                                                                         |                       |
-| #     | indicates a Comment                                                                                                                                   |                       |
+| ;     | indicates a Comment                                                                                                                                   |                       |
 
- see [[./input.conf][supplied configuration file]] for an example 
+
 
 ** Implemented Midi Commands
 
