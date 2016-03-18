@@ -11,10 +11,12 @@
 #include <jack/session.h>
 #include <jack/ringbuffer.h>
 
-#include "midiprotocol.h"
+//#include "midiprotocol.h"
+#include "glue.h"
 
 #define CLIENT_NAME "MIDI_JOYSTICK"
 #define OUTPUT_PORT_NAME "MidiOut"
+
 
 
 static jack_port_t *output_port;
@@ -64,13 +66,13 @@ int process (jack_nframes_t nframes, void *arg)
 	       continue;
 	  }
 	  
-	  jack_midi_data_t midi_data[midi.size];
+	  jack_midi_data_t midi_data[MAX_MIDI_MSG];
 	  
-	  for (data_idx = 0; data_idx < midi.size; ++data_idx) {
-	       midi_data[data_idx] = midi.midi_buf[data_idx];
+	  for (data_idx = 0; data_idx < midi.size && data_idx < MAX_MIDI_MSG; ++data_idx) {
+	       midi_data[data_idx] = midi.msg[data_idx];
 	  }
 	       
-	  jack_midi_event_write(port_buf, frame_idx, midi_data, sizeof(midi_data));
+	  jack_midi_event_write(port_buf, frame_idx, midi_data, midi.size);
      }
 
 
