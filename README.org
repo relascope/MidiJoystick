@@ -37,56 +37,124 @@
 ** Configuration Syntax
 
 
- Configuration entry:
+ A Configuration entry:
  
-   ~((t i) (CMD CH PARAM))~
+   ~((t i) ((CMD [CH]) [PARAM*])+)~
 
- Configuration entry with ommitted 'PARAM' (in this case 'PARAM' defaults to 0x00)
+ (brackets denote optional elements;
+  a '+' denotes one or more of the preceeding list/element; 
+  a * denotes zero or more of the preceedint list/elemnt;)
 
-   ~((t i) (CMD CH))~
+ In the configuration you can use numbers of the base 10 or of the base 16.
+ As MIDI is a byte oriented protocol it's easier to use base 16 (hexadecimal) numbers.
+ 
+~NOTE: In the configuration file you have to write hexadecimal numbers with the prefix '#x' instead of the common prefix '0x'.~
+      ~So instead of writing '0xE0' you write '#xE0'.~
 
+ A entry is consists of two parts on the toplevel:
+ 
+ 1) One Inputidentifier
+ 2) One or more Commandbindings
+
+*** Inputidentifier:  
+
+ The Inputidentifier tells the program which joystick inputs should emit a MIDI message.
+
+    ~(t i)~
+
+ A Inputidentifier consists of a token ~t~ and an index ~i~.
+ The token ~t~ specifies if the input is a axis or a button, the index ~i~ specifies the index of the axis or button.
+ Allowed values for token ~t~ are 'a' for axis and 'b' for button.
+ Allowed values for index ~i~ are any positive integers.
+
+ To determine the index of any axis or button please use the unix tool 'jstest'.
+
+
+*** Commandbindings:
+
+ Commandbindings tell the program which MIDI messages should be emitted when a input (specified by the Inputidentifier) is recognized.
+
+    ~((CMD [CH]) [PARAM+])~
+
+ A Commandbinding consists of two parts:
+
+ 1) The MIDI Command ~CMD~ and a MIDI Channel ~CH~. The later is ignored (therefor optional) if the MIDI Command is a SysEx (-> CMD := 0xF0)
+    Channels are counted from zero.
+
+ 2) A list of zero or more integers ~PARAM~, which are supplied as aditional parameters for the MIDI Command ~CMD~.
+
+ Allowed values for ~CMD~ are contained in this list: [0x80, 0x90, 0xA0, 0xB0, 0xC0, 0xD0, 0xE0, 0xF0]
+ 
+ Allowed values for ~PARAM~ are in the range of 0x00 - 0x7F.
+
+*** Examples:
+
+ Here are some examples how a configuration entry can look like:
+
+ 1) Channel 3 Pitch Bend on Axis 1
+
+#+BEGIN_SRC lisp
+ ;; Bind axis with index 1 to Pitch-Bend on Channel 3
+ ((a 1) ((#xE0 #x02))
+#+END_SRC
+
+ 2) Channel 16 Continous Controller number 1 on axis 3
+
+#+BEGIN_SRC lisp
+ ;; Bind axis with index 3 to Continous Controller number 1 on channel 16
+ ((a 3) ((#xB0 #xF0) #x01))
+#+END_SRC
+ 
+ 3) Send a MIDI Real-Time Universal System Exclusive Message when button 1 is pressed
+
+#+BEGIN_SRC lisp
+ ((b 1) ;; Bind to input 'Button with index 1'
+   ((#xF0) ;; denote that this is a System Exclusive Message
+      #x7F #x7F #x06 #02 #xF7)) ;; the SysEx Message which will be send (here: MIDI Machine Control to start playing)
+#+END_SRC
+
+*** Aditional Notes:
 
  
  A configuration entry can be split to multiple lines:
 
 #+BEGIN_SRC lisp
  ((t i) 
-        (CMD 
-             CH PARAM))
+        ((CMD CH) 
+          PARAM))
 #+END_SRC
 
- Any line containing a ';' is discarded as comment by the configuration parser.
- Comments have to be on their own line, but can appear in their own line between a configuration entry:
-
+ Comments are denoted with ';'. Comments can appear between entries on their own or last in a line
 
 #+BEGIN_SRC lisp
  ((t i) 
  ; A nice comment 
-        (CMD 
-             CH PARAM))
+        ((CMD ;; another comment 
+             CH) PARAM))
 #+END_SRC
  
  Remember to enclose all your entries with parantheses:
 
 #+BEGIN_SRC lisp
-  (
-    ((t i) (CMD CH PARAM))
-    ((t i) (CMD CH PARAM))
-    ((t i) (CMD CH PARAM))
-  )
+  ( ;; <- this paranthesis is needed
+    ((t i) ((CMD CH) PARAM))
+    ((t i) ((CMD) PARAM))
+    ((t i) ((CMD CH)))
+  ) ;; <- this one too
 #+END_SRC
 
- see [[./input.conf][supplied configuration file]] for an example of a complete config file
+ see [[./input.conf][supplied configuration file]] for more examples of a complete config file
 
+*** Overview Table
 
-| token | note                                                                                                                                                  | values                |
-|-------+-------------------------------------------------------------------------------------------------------------------------------------------------------+-----------------------|
-| t     | specifies input type: a or A for axis; b or B for buttons                                                                                             | [aAbB]                |
-| i     | specifies index of the input type (as decimal)                                                                                                        | [0-9]+                |
-| CMD   | Midi command identifier as two digit hex number (see table below)                                                                                     | 0[xX][89a-fA-F]0      |
-| CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                           | 0[xX]0[0-9a-fA-F]     |
-| PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  defaults to 0x00 meaning of parameter is specific to the midi command (see table below) | 0[xX][0-7][0-9a-fA-F] |
-| ;     | indicates a Comment                                                                                                                                   |                       |
+| token | note                                                                                                                                               | values           |
+|-------+----------------------------------------------------------------------------------------------------------------------------------------------------+------------------|
+| t     | specifies input type: a for axis; b  buttons                                                                                                       | [ab]             |
+| i     | specifies index of the input type                                                                                                                  | [0-9]+           |
+| CMD   | Midi command identifier as two digit hex number (see table below)                                                                                  | #x[89a-fA-F]0    |
+| CH    | Midi channel for the command as a two digit hex number (0x00 - > 0x0F) so 0x00 is Channel 1                                                        | #x0[0-9a-fA-F]   |
+| PARAM | optional parameter as a two digit hex number (0x00 -> 0x7F),  no default if omitted command; Meaning of PARAM is special to CMD -> see table below | [0-7][0-9a-fA-F] |
+| ;     | indicates a Comment                                                                                                                                |                  |
 
 
 
@@ -95,14 +163,15 @@
  Warning: Notes triggered with command 0x90 (Note-on) are not released.
 
 
- | Command | Meaning                   | joystick read value | config                     | comment                                    |
- |---------+---------------------------+---------------------+----------------------------+--------------------------------------------|
- |    0x90 | Note-on                   | note                | sets note for input center | default note 0x40 (note value: E4)         |
- |    0xB0 | Continous Controller (CC) | controller value    | CC ID                      | see table of CC IDs in the [[./midicompendium.org][MIDI Compendium]] |
- |    0xC0 | Patch Change              | not used            | patch number               |                                            |
- |    0xD0 | Channel Pressure          | pressure amount     | not used                   |                                            |
- |    0xE0 | Pitch Bend                | bend amount         | not used                   |                                            |
- |         |                           |                     |                            |                                            |
+ | Command | Meaning                   | joystick read value | config                                 | comment                                    |
+ |---------+---------------------------+---------------------+----------------------------------------+--------------------------------------------|
+ |    0x80 | Note-off                  | last note           | transpose around center note           | center note is 0x40 (note value: E4)       |
+ |    0x90 | Note-on                   | note                | transpose around center note           | center note is 0x40 (note value: E4)       |
+ |    0xB0 | Continous Controller (CC) | controller value    | CC ID                                  | see table of CC IDs in the [[./midicompendium.org][MIDI Compendium]] |
+ |    0xC0 | Patch Change              | not used            | patch number                           |                                            |
+ |    0xD0 | Channel Pressure          | pressure amount     | not used                               |                                            |
+ |    0xE0 | Pitch Bend                | bend amount         | not used                               |                                            |
+ |    0xF0 | SysEx Messages            | not used            | the SysEx Message which should be send |                                            |
 
  For further information see the included [[./midicompendium.org][MIDI Compendium]]
 

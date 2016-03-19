@@ -170,7 +170,7 @@
 
  Example:
 
- ~0xF0 0x7F 0x7F 0x06 0x1 0xF7~    send play to all devices
+ ~0xF0 0x7F 0x7F 0x06 0x02 0xF7~    send play to all devices
 
  | token      | comment                                             |
  |------------+-----------------------------------------------------|
