@@ -232,20 +232,12 @@
 
  will build:
  - midijoystick:    main program
- - explain_config:  tool for configuration checking
- - config.pdf:      nice picture of configuration parser statemachine
 
  Dependencies:
  - jackaudioserver
- - ragel
- 
- Optional dependencies:
- - graphwiz
- 
- 
- Configuration parsing is made with [[http://www.colm.net/open-source/ragel/][Ragel]] (a state machine compiler).
- Ragel compiles to a regular c source code file but can generate *.dot files for [[http://www.graphviz.org/][Graphviz]] too.
- The output files of Ragel are included in this repository, so you shouldn't need it.
+ - [[http://gambitscheme.org/wiki/index.php/Main_Page][Gambit]] 
+
+
  
 
 ** Additional Notes
