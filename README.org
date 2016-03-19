@@ -87,6 +87,45 @@
  
  Allowed values for ~PARAM~ are in the range of 0x00 - 0x7F.
 
+*** Bind multiple Commandbindings to one Inputidentifier
+
+ To bind multiple Commandbindings to one Inputidentifier you just add more Commandbindings to your entry.
+ 
+ See this example how you can bind two different messages to one axis:
+
+#+BEGIN_SRC lisp
+ ((a 1) ;; bind to axis #1
+  ((#xB0 #x02) #x01) ;; Continous Controller #1 on Channel 3
+  ((#xB0 #x01) #x01)) ;; Continous Controller #1 on Channel 2
+#+END_SRC
+
+ Here we bind the input from axis number 1 to two Continous Controller with the ID 1.
+ One for Channel 3 and one for Channel 2.
+
+#+BEGIN_SRC lisp
+ ((b 7) ;; bind to button #7
+  ((#xF0) #x7F #x7F #x06 #x02 #xF7) ;; Send SysEx to send MMC Start
+  ((#xF0) #x7F #x7F #x06 #x01 #xF7)) ;; Send SysEx to send MMC Stop
+#+END_SRC
+
+ Here we bind two SysEx messages (so called 'MIDI Real-Time Universal System Exclusive Messages'; more in the [[./midicompendium.org][Midicompendium]])
+ to the button number 7. 
+
+ 
+ There is one difference how buttons and axis act when multiple Commands are bound to one input:
+ 
+ Axis: All Commands are send when a input is recogniced. They are issued in the order in which they are specified.
+       This should be semi-simultan.
+
+ Buttons: When a button is pressed the first MIDI Command is issued, on the second press the second Command is issued, and so on.
+          If the last Command in the list is send, the next press will issue the first Command again. A endless cycle...
+
+          In the example above that would mean:
+          
+          first  press: Send SysEx to send MMC Start is issued
+          second press: Send SysEx to send MMC Stop is issued
+          third  press: Send SysEx to send MMC Start is issued
+
 *** Examples:
 
  Here are some examples how a configuration entry can look like:
@@ -165,8 +204,6 @@
 
  | Command | Meaning                   | joystick read value | config                                 | comment                                    |
  |---------+---------------------------+---------------------+----------------------------------------+--------------------------------------------|
- |    0x80 | Note-off                  | last note           | transpose around center note           | center note is 0x40 (note value: E4)       |
- |    0x90 | Note-on                   | note                | transpose around center note           | center note is 0x40 (note value: E4)       |
  |    0xB0 | Continous Controller (CC) | controller value    | CC ID                                  | see table of CC IDs in the [[./midicompendium.org][MIDI Compendium]] |
  |    0xC0 | Patch Change              | not used            | patch number                           |                                            |
  |    0xD0 | Channel Pressure          | pressure amount     | not used                               |                                            |
