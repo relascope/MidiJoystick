@@ -41,8 +41,8 @@
  Here an example, how you could do it:
 
 #+BEGIN_SRC lisp
- # Map axis 1 to CC 0x01 (Modulation) on channel 1
- ((a 1) (0xB0 0x00 0x01);
+ ;; Map axis 1 to CC 0x01 (Modulation) on channel 1
+ ((a 1) ((0xB0 0x00) 0x01))
 #+END_SRC
 
  
@@ -140,7 +140,7 @@
  configuration example:
 
  System reset on button 1
- ~((b 1) (0xFF))~
+ ~((b 1) ((0xFF)))~
 
 *** SysEx Commands
 
