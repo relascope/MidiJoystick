@@ -134,7 +134,7 @@ struct js_event input_event;
 	    ((equal? cmd *MIDI-CMD-Channel-Pressure*) (build-msg-no-param midi-conf))
 	    ((equal? cmd *MIDI-CMD-Pitch-Bend*) (build-msg-pitch-bend midi-conf))
 	    ((equal? cmd *MIDI-CMD-SYSEX*) (build-msg-no-input midi-conf))
-	    ((or (equal? cmd *MIDI-CMD-Note-Off*) (equal? cmd *MIDI-CMD-Note-On*)) (build-msg-note-on/off midi-conf))
+	    ;; ((or (equal? cmd *MIDI-CMD-Note-Off*) (equal? cmd *MIDI-CMD-Note-On*)) (build-msg-note-on/off midi-conf))
 	    (else (lambda (input-val) '() )))))
 
 
@@ -178,18 +178,11 @@ struct js_event input_event;
 
 
 
-;; returns of first element of '(<instance of midi> ...) found in table 'config-table' by (ev-id t i), or a dummy if key is not found
-(define (get-msg-by-ev-id config-table)
-  (let* ((event-id (ev-id (js-event-type) (js-event-number)))
-	 (midi-lst (table-ref config-table event-id `(,(make-midi #x00 #x00 '() (lambda (x) '()))))))
-    (midi-func  (car midi-lst))))
-
-
 (define (get-midi-msgs config-table)
 
   ; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
   (define (build-button-command-list event-id)
-    (let ((midi-lst (table-ref config-table event-id `(,make-midi #x00 #x00 '() (lambda (x) '())))))
+    (let ((midi-lst (table-ref config-table event-id `(,(make-midi #x00 #x00 '() (lambda (x) '()))))))
       (table-set! config-table event-id (rotate-left midi-lst))
       (cons (midi-func (car midi-lst)) '())))
 
@@ -224,7 +217,10 @@ struct js_event input_event;
 	    (let ((midi-list (get-midi-msgs config))
 		  (event-value (js-event-value)))
 	      (let sendloop ((midi-list midi-list))
-		(let* ((msg  ((car midi-list) event-value))
+		(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
+						       (equal? event-value *BUTTON-PRESSED*))
+						  #x7F
+						  event-value)))
 		       (msg-length (length msg)))
 		  (if (not (equal? msg-length 0))
 		      (begin 
