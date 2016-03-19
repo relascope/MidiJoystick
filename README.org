@@ -216,12 +216,8 @@
 
    
 - TODO Support System Realtime Messages (Start, Stop, Reset )
-- TODO SysEx messages support (eg: support bigger parameters)
-- TODO bind multiple midi commands to one input (should result in better support for 0x80 / 0x90 )
 - TODO allow to give joystick / configuration as commandline arguments
 - TODO allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)
-- TODO allow to configure deadzone per axis (instead of hardcoded -/+4000)
-- TODO allow to configure max values per axis (e.g. clip on -/+6000)
 - TODO _maybe_ find a way to configure buttons as mod keys for axis events (e.g. axis mapped to Pitch Bend, hold a button and axis now emits CC )
 
 
