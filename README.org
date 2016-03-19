@@ -252,7 +252,6 @@
 
 ** Source Code Map
 
-  currently midijoystick.o gets created by copying main.o , that's ugly and i should change that 
 
  | file(s)          | comments                                  |
  |------------------+-------------------------------------------|
