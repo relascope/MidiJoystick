@@ -228,13 +228,6 @@ struct js_event input_event;
 			(send-midi msg (length msg)))))
 		(if (not (null? (cdr midi-list)))
 		    (sendloop (cdr midi-list)))))
-	    ; only process button events on 'pressed'
-	    ;; (if (not (and (equal? (js-event-type) *JS-EVENT-BUTTON*) (equal? (js-event-value) *BUTTON-RELEASED*)))
-	    ;; 	(let ((msg ((get-msg-by-ev-id config) (js-event-value))))
-	    ;; 	  (if (not (null? msg)) ; ignore empty messages
-	    ;; 	      (begin 
-	    ;; 		(display msg) (newline)
-	    ;; 		(send-midi msg (length msg)))))) ; send message 
 	    (display "failed to get event\n")))
       (mainloop))
 
