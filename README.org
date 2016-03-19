@@ -199,8 +199,6 @@
 
 ** Implemented Midi Commands
 
- Warning: Notes triggered with command 0x90 (Note-on) are not released.
-
 
  | Command | Meaning                   | joystick read value | config                                 | comment                                    |
  |---------+---------------------------+---------------------+----------------------------------------+--------------------------------------------|
@@ -264,20 +262,11 @@
 
   currently midijoystick.o gets created by copying main.o , that's ugly and i should change that 
 
- | file(s)               | comments                                               |
- |-----------------------+--------------------------------------------------------|
- | explain_config.c      | tool to check configuration                            |
- | main.c                | main program                                           |
- | config.{rl,c,dot,pdf} | all about configuration file parsing                   |
- | joystick.{c,h}        | for talking with the joystick device file              |
- | midijack.{c,h}        | for talking with jackaudio server                      |
- | midiprotocol.{c,h}    | this knows how midi msgs look like on the nibble level |
- | mapping.{c,h}         | glue code between midiprotocol and config              |
-
-
-** minor thoughts
-
- - One design goal is to minimize heap allocation
+ | file(s)          | comments                                  |
+ |------------------+-------------------------------------------|
+ | midijoystick.scm | main program                              |
+ | joystick.{c,h}   | for talking with the joystick device file |
+ | midijack.{c,h}   | for talking with jackaudio server         |
 
 
 ** License
