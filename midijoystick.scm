@@ -205,9 +205,17 @@ struct js_event input_event;
 
 ;; MAIN
 
-(let ((args command-line))
-  (let ((fd-joy (open-joystick "/dev/input/js0"))
-	(config (parse-config "./input.conf")))
+(let* ((args (command-line))
+       (js-file-flag (member "-j" args))
+       (conf-file-flag (member "-c" args)))
+  (display args) (newline)
+  
+  (let ((fd-joy (if (and js-file-flag (> (length js-file-flag) 1))
+		    (open-joystick (cadr js-file-flag))
+		    (open-joystick "/dev/input/js0")))
+	(config (if (and conf-file-flag (> (length conf-file-flag) 1))
+		    (parse-config (cadr conf-file-flag))
+		    (parse-config "./input.conf"))))
 
     (setup-jack) 
 
