@@ -165,7 +165,7 @@ struct js_event input_event;
 		      ((equal? (car id) 'b) *JS-EVENT-BUTTON*)
 		      (else #f)))
 	     (i (cadr id)))
-	(display command-bindings) (newline)
+	;; (display command-bindings) (newline)
 	(if (equal? t #f) (begin (display  "failed to parse line: ") (display entry) (newline)) 
 	    (table-set! config-table (ev-id t i) (create-list-of-midi-structs command-bindings)))))
 
@@ -208,7 +208,7 @@ struct js_event input_event;
 (let* ((args (command-line))
        (js-file-flag (member "-j" args))
        (conf-file-flag (member "-c" args)))
-  (display args) (newline)
+  ;; (display args) (newline)
   
   (let ((fd-joy (if (and js-file-flag (> (length js-file-flag) 1))
 		    (open-joystick (cadr js-file-flag))
