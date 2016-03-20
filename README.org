@@ -7,7 +7,7 @@
  
  I admit not every configuration is usefull. But here are some ideas how to configure your joystick:
  * map all axes to Pitch Bend and Continous Controller
- * map your buttons to some of the generic switches (see CC IDs)
+ * map your buttons to some of the generic switches (see CC IDs) or SysEx Messages
  * or see [[./input.conf][supplied configuration file]] for an example
 
  MidiJoystick uses a configuration file to read your input mapping, syntax is described further down.
@@ -17,15 +17,13 @@
  On start 'midijoystick' will parse your configuration file, telling you about problematic lines 
  and the mapping between midi command and input.
 
- When you just want to check or get your current configuration file explained, you can use the 
- included tool 'explain_config'.
-  
+
  
  'midijoystick' will never check if your configuration makes sense on midi level. If you want to Pitch Bend with a button, you can do it.
  If you want to use CC 0x43 (Soft Pedal) with an axis, you can do it.
  
 
- Currently joystick device file and configuration is hardcoded as:
+ If not supplied as commandline arguments, Midijoystick will default to following files:
 
  | input file    | path           |
  |---------------+----------------|
@@ -33,6 +31,13 @@
  | configuration | ./input.conf   |
 
  If you need help on MIDI see the included [[./midicompendium.org][MIDI Compendium]].
+
+** Commandline Arguments
+
+ | flag | comment                    | default        |
+ |------+----------------------------+----------------|
+ | -j   | path to joystick           | /dev/input/js0 |
+ | -c   | path to configuration file | ./input.conf   |
 
 ** Configuration Syntax
 
@@ -216,7 +221,6 @@
 
    
 - TODO Support System Realtime Messages (Start, Stop, Reset )
-- TODO allow to give joystick / configuration as commandline arguments
 - TODO allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)
 - TODO _maybe_ find a way to configure buttons as mod keys for axis events (e.g. axis mapped to Pitch Bend, hold a button and axis now emits CC )
 
