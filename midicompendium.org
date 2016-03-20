@@ -51,10 +51,8 @@
  e.g.: 
 
  - Mapping 0x00 to an axis would make it hard to select a bank
- - Mapping 0x00 to an button would switch between bank 0x7F on press and 0x00 on release
- - So using 0x00 makes not much sense at all in the current implementation... i'm sorry
- - Mapping 0x08 could be usefull to map to a axis but not as much when mapped to a button
- - etc...
+ - Mapping 0x00 to an button would always select bank 0x7F 
+ - so mapping 0x00 would make no sense in the current implementation .. sorry
 
 
  
