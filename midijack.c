@@ -31,7 +31,6 @@ static void signal_handler(int sig)
      
      jack_ringbuffer_free (rb);
      jack_client_close(client);
-     fprintf(stderr, "received signal, exiting... \n");
      exit(0);
 }
 
