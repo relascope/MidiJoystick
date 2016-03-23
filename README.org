@@ -85,6 +85,11 @@
  
  Allowed values for ~PARAM~ are in the range of 0x00 - 0x7F.
 
+
+
+ So a Commandbinding can be viewed as a template, it represents quite closely the real MIDI message on the byte level. It's a template cause dependeing,
+ on the specified ~CMD~, the joystick input is appended to or insert into the byte stream.
+
 *** Bind multiple Commandbindings to one Inputidentifier
 
  To bind multiple Commandbindings to one Inputidentifier you just add more Commandbindings to your entry.
