@@ -24,7 +24,7 @@ struct js_event input_event;
 
 ;; map val from range [val-min,val-max] into output range [out-min,out-max]
 (define (map-to-range val val-min val-max out-min out-max)
-  (let ((slope (* 1.0 (/ (- out-max out-min) (- val-max val-min)))))
+  (let ((slope (/ (- out-max out-min) (- val-max val-min))))
     (inexact->exact (round (+ out-min (* slope (- val val-min)))))))
 
 
