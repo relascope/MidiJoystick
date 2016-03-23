@@ -18,7 +18,7 @@ struct js_event input_event;
 
 ;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
 (define (rotate-left lst)
-  (append (cdr lst) (list (car list)))
+  (append (cdr lst) (list (car lst))))
   ;; `(,@(cdr lst) ,@(cons (car lst) '())))
 
 
@@ -183,7 +183,7 @@ struct js_event input_event;
 
   ; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
   (define (build-button-command-list event-id)
-    (let ((midi-lst (table-ref config-table event-id `(,(make-midi #x00 #x00 '() (lambda (x) '()))))))
+    (let ((midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()))))))
       (table-set! config-table event-id (rotate-left midi-lst))
       (cons (midi-func (car midi-lst)) '())))
 
@@ -192,7 +192,7 @@ struct js_event input_event;
     (letrec ((build (lambda (lst) (if (null? lst) lst
 				      (cons (midi-func (car lst))
 					    (build (cdr lst)))))))
-      (build (table-ref config-table event-id `(,(make-midi #x00 #x00 '() (lambda (x) '())))))))
+      (build (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '())))))))
   
   (let* ((event-type (js-event-type))
 	 (event-id (ev-id event-type (js-event-number))))
@@ -201,7 +201,7 @@ struct js_event input_event;
 	  ((and (equal? event-type *JS-EVENT-BUTTON*)
 		(equal? (js-event-value) *BUTTON-PRESSED*)) ; handle button presed event
 	   (build-button-command-list event-id))
-	  (else `(,(lambda (x) '()))))))
+	  (else (list (lambda (x) '()))))))
 
 
 ;; MAIN
