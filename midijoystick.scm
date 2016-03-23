@@ -18,7 +18,8 @@ struct js_event input_event;
 
 ;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
 (define (rotate-left lst)
-  `(,@(cdr lst) ,@(cons (car lst) '())))
+  (append (cdr lst) (list (car list)))
+  ;; `(,@(cdr lst) ,@(cons (car lst) '())))
 
 
 ;; map val from range [val-min,val-max] into output range [out-min,out-max]
