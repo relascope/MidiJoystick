@@ -25,12 +25,25 @@
 
  If you need help on MIDI see the included [[./midicompendium.org][MIDI Compendium]].
 
+
+** Changelog
+
+ * added deadzone commandline argument for axes
+ * added usage commandline argument
+ * added verbose commandline argument
+
+
 ** Commandline Arguments
 
- | flag | comment                    | default        |
- |------+----------------------------+----------------|
- | -j   | path to joystick           | /dev/input/js0 |
- | -c   | path to configuration file | ./input.conf   |
+ | flag | comment                                   | default        |
+ |------+-------------------------------------------+----------------|
+ | -j   | path to joystick                          | /dev/input/js0 |
+ | -c   | path to configuration file                | ./input.conf   |
+ | -d   | integer denoting deadzone radius for axes | no deadzone    |
+ | -v   | if given prints midi messages             | -              |
+ | -h   | prints usage information                  |                | 
+
+ You may want to use '-d 3000' or a similar value, when your axes don't emit a zero value when released.
 
 ** Configuration Syntax
 
