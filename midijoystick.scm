@@ -18,11 +18,13 @@ struct js_event input_event;
 
 
 ;; normalize value to zero if value is in range of [-deadzone,deadzone]
-(define (apply-deadzone value deadzone)
-  (if (and (< value deadzone)
-	  (> value (- deadzone)))
-      0
-      value))
+(define (get-deadzone-function deadzone) 
+  (define (apply-deadzone value)
+    (if (and (< value deadzone)
+	     (> value (- deadzone)))
+	0
+	value))
+  apply-deadzone)
 
 
 ;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
@@ -74,7 +76,7 @@ struct js_event input_event;
 ;; Configfile Parsing
 
 ;; data structure to hold a commandbinding
-(define-structure midi cmd ch param func)
+(define-structure midi cmd ch param func last-value)
 
 ;; returns a table(k,v) where: k := (ev-id t i); v = '(<instance[s] of midi> ... )
 (define (parse-config path)
@@ -155,7 +157,8 @@ struct js_event input_event;
 	   (midi (make-midi (car cmd-ch)
 			    (if (pair? (cdr cmd-ch)) (cadr cmd-ch))
 			    (cdr command-binding)
-			    (lambda (input-val) '()))))
+			    (lambda (input-val) '())
+			    -1)))
       (midi-func-set! midi (midi-func-dispatch midi))
       midi))
 
@@ -188,30 +191,37 @@ struct js_event input_event;
     config-table))
 
 
+;; returns a list of complete midi messages
+(define (get-midi-msgs config-table event-value apply-deadzone)
 
-(define (get-midi-msgs config-table)
+  ;; predicate if combination of type and value equals a button-pressed event
+  (define (button-pressed? type value)
+    (if (and (equal? type *JS-EVENT-BUTTON*) (equal? value *BUTTON-PRESSED*)) #t #f))
 
   ; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
   (define (build-button-command-list event-id)
-    (let ((midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()))))))
+    (let ((midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) -1)))))
       (table-set! config-table event-id (rotate-left midi-lst))
-      (cons (midi-func (car midi-lst)) '())))
+      (cons ((midi-func (car midi-lst))
+	     (if (button-pressed? (js-event-type) event-value)
+		 #x7F
+		 event-value))
+	    (list '()))))
 
   ; returns '(lambda (input-val) (...) ...) retrieved from config table by event-id
   (define (build-axis-command-list event-id)
     (letrec ((build (lambda (lst) (if (null? lst) lst
-				      (cons (midi-func (car lst))
+				      (cons ((midi-func (car lst)) (apply-deadzone event-value))
 					    (build (cdr lst)))))))
-      (build (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '())))))))
+      (build (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) -1))))))
   
   (let* ((event-type (js-event-type))
 	 (event-id (ev-id event-type (js-event-number))))
     (cond ((equal? event-type *JS-EVENT-AXIS*) ; handle axis event
 	   (build-axis-command-list event-id))
-	  ((and (equal? event-type *JS-EVENT-BUTTON*)
-		(equal? (js-event-value) *BUTTON-PRESSED*)) ; handle button presed event
+	  ((button-pressed? event-type event-value)	; handle button presed event
 	   (build-button-command-list event-id))
-	  (else (list (lambda (x) '()))))))
+	  (else (list'())))))
 
 
 
@@ -243,22 +253,20 @@ struct js_event input_event;
 		(config (if (and conf-file-flag (> (length conf-file-flag) 1))
 			    (parse-config (cadr conf-file-flag))
 			    (parse-config "./input.conf")))
-		(deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
-			      (string->number (cadr deadzone-flag))
-			      0)))
+		(apply-deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
+				    (get-deadzone-function (string->number (cadr deadzone-flag)))
+				    (get-deadzone-function 0))))
   
 
 	    (setup-jack)
 	    (let mainloop ()
 	      (let ((ev-res (get-js-event fd-joy)))
 		(if (equal? 0 ev-res) ; test if we got a valid js_event
-		    (let ((midi-list (get-midi-msgs config))
-			  (event-value (js-event-value)))
+		    
+		    (let* ((event-value (js-event-value))
+			   (midi-list (get-midi-msgs config event-value apply-deadzone)))
 		      (let sendloop ((midi-list midi-list))
-			(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
-							       (equal? event-value *BUTTON-PRESSED*))
-							  #x7F
-							  (apply-deadzone event-value deadzone))))
+			(let* ((msg  (car midi-list))
 			       (msg-length (length msg)))
 			  (if (not (equal? msg-length 0))
 			      (begin
@@ -267,6 +275,7 @@ struct js_event input_event;
 				(send-midi msg (length msg)))))
 			(if (not (null? (cdr midi-list)))
 			    (sendloop (cdr midi-list)))))
+		    
 		    (display "failed to get event\n")))
 	      (mainloop)))
 
