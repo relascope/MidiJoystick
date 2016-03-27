@@ -16,6 +16,15 @@ struct js_event input_event;
 
 ;; Misc Helper Functions
 
+
+;; normalize value to zero if value is in range of [-deadzone,deadzone]
+(define (apply-deadzone value deadzone)
+  (if (and (< value deadzone)
+	  (> value (- deadzone)))
+      0
+      value))
+
+
 ;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
 (define (rotate-left lst)
   (append (cdr lst) (list (car lst))))
@@ -205,11 +214,13 @@ struct js_event input_event;
 	  (else (list (lambda (x) '()))))))
 
 
+
 ;; MAIN
 
 (let* ((args (command-line))
        (js-file-flag (member "-j" args))
-       (conf-file-flag (member "-c" args)))
+       (conf-file-flag (member "-c" args))
+       (deadzone-flag (member "-d" args)))
   ;; (display args) (newline)
   
   (let ((fd-joy (if (and js-file-flag (> (length js-file-flag) 1))
@@ -217,15 +228,20 @@ struct js_event input_event;
 		    (open-joystick "/dev/input/js0")))
 	(config (if (and conf-file-flag (> (length conf-file-flag) 1))
 		    (parse-config (cadr conf-file-flag))
-		    (parse-config "./input.conf"))))
+		    (parse-config "./input.conf")))
+	(deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
+		      (string->number (cadr deadzone-flag))
+		      0)))
 
-    (setup-jack) 
+    (setup-jack)
+
+
 
     (let mainloop ()
       (let ((ev-res (get-js-event fd-joy)))
 	(if (equal? 0 ev-res) ; test if we got a valid js_event
 	    (let ((midi-list (get-midi-msgs config))
-		  (event-value (js-event-value)))
+		  (event-value (apply-deadzone (js-event-value) deadzone)))
 	      (let sendloop ((midi-list midi-list))
 		(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
 						       (equal? event-value *BUTTON-PRESSED*))
