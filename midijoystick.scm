@@ -188,7 +188,7 @@ struct js_event input_event;
 			    (if (pair? (cdr cmd-ch)) (cadr cmd-ch))
 			    (cdr command-binding)
 			    (lambda (input-val) '())
-			    #f)))
+			    0)))
       (midi-func-set! midi (midi-func-dispatch midi))
       midi))
 
@@ -297,7 +297,15 @@ struct js_event input_event;
 			    (parse-config "./input.conf")))
 		(apply-deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
 				    (get-deadzone-function (string->number (cadr deadzone-flag)))
-				    (get-deadzone-function 0))))
+				    (get-deadzone-function 0)))
+		(last-input-table (make-table))
+		(make-dummy-js-event (lambda (ev-id) (make-js-event ev-id 0 0 0 #f #f #f)))
+		(compare-js-event (lambda (ev1 ev2) (let ((ev-val1 (apply-deadzone (js-event-value ev1)))
+							  (ev-val2 (apply-deadzone (js-event-value ev2))))
+						      (if (and (js-event-valid ev1) (js-event-valid ev2)
+							       (equal? ev-val2 ev-val1))
+							  #t
+							  #f)))))
   
 
 	    (setup-jack)
@@ -305,16 +313,21 @@ struct js_event input_event;
 	      (let ((current-event (get-js-event)))
 ;		(print-js-event current-event)
 		(if (equal? (js-event-valid current-event) #t) ; test if we got a valid js_event
-		    (let ((midi-list (get-midi-msgs config current-event apply-deadzone)))
-		      (let sendloop ((midi-list midi-list))
-			(let* ((msg  (car midi-list))
-			       (msg-length (length msg)))
-			  (if (not (equal? msg-length 0))
-			      (begin
-				(if verbose-flag (begin (display msg) (newline)))
-				(send-midi msg (length msg)))))
-			(if (not (null? (cdr midi-list)))
-			    (sendloop (cdr midi-list)))))
+		    (let* ((event-id (js-event-ev-id current-event))
+			   (last-input (table-ref last-input-table event-id (make-dummy-js-event event-id))))
+;		      (display last-input) (newline) (display current-event) (newline) (newline)
+		      (if (or (js-event-is-button? current-event) (not (compare-js-event current-event last-input)))
+			  (let ((midi-list (get-midi-msgs config current-event apply-deadzone)))
+			    (let sendloop ((midi-list midi-list))
+			      (let* ((msg  (car midi-list))
+				     (msg-length (length msg)))
+				(if (not (equal? msg-length 0))
+				    (begin
+				      (if verbose-flag (begin (display msg) (newline)))
+				      (send-midi msg (length msg)))))
+			      (if (not (null? (cdr midi-list)))
+				  (sendloop (cdr midi-list))))
+			    (table-set! last-input-table event-id current-event))))
 		    
 		    (display "failed to get event\n")))
 	      (mainloop)))
