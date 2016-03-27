@@ -253,12 +253,12 @@ struct js_event input_event;
 	      (let ((ev-res (get-js-event fd-joy)))
 		(if (equal? 0 ev-res) ; test if we got a valid js_event
 		    (let ((midi-list (get-midi-msgs config))
-			  (event-value (apply-deadzone (js-event-value) deadzone)))
+			  (event-value (js-event-value)))
 		      (let sendloop ((midi-list midi-list))
 			(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
 							       (equal? event-value *BUTTON-PRESSED*))
 							  #x7F
-							  event-value)))
+							  (apply-deadzone event-value deadzone))))
 			       (msg-length (length msg)))
 			  (if (not (equal? msg-length 0))
 			      (begin
