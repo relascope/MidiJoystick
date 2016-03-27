@@ -215,6 +215,14 @@ struct js_event input_event;
 
 
 
+(define (print-usage name)
+  (print "Usage: " name " [options]\n")
+  (print "Options:\n")
+  (print "  -h     \tprint this information\n")
+  (print "  -j path\tjoystick device\n")
+  (print "  -c path\tconfiguration file\n")
+  (print "  -d uint\tdeadzone radius for axes\n"))
+
 ;; MAIN
 
 (let* ((args (command-line))
@@ -222,39 +230,41 @@ struct js_event input_event;
        (conf-file-flag (member "-c" args))
        (deadzone-flag (member "-d" args)))
   ;; (display args) (newline)
+
+    (if (member "-h" args)
+	(print-usage (car args))
+	(begin
   
-  (let ((fd-joy (if (and js-file-flag (> (length js-file-flag) 1))
-		    (open-joystick (cadr js-file-flag))
-		    (open-joystick "/dev/input/js0")))
-	(config (if (and conf-file-flag (> (length conf-file-flag) 1))
-		    (parse-config (cadr conf-file-flag))
-		    (parse-config "./input.conf")))
-	(deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
-		      (string->number (cadr deadzone-flag))
-		      0)))
+	  (let ((fd-joy (if (and js-file-flag (> (length js-file-flag) 1))
+			    (open-joystick (cadr js-file-flag))
+			    (open-joystick "/dev/input/js0")))
+		(config (if (and conf-file-flag (> (length conf-file-flag) 1))
+			    (parse-config (cadr conf-file-flag))
+			    (parse-config "./input.conf")))
+		(deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
+			      (string->number (cadr deadzone-flag))
+			      0)))
+  
 
-    (setup-jack)
+	    (setup-jack)
+	    (let mainloop ()
+	      (let ((ev-res (get-js-event fd-joy)))
+		(if (equal? 0 ev-res) ; test if we got a valid js_event
+		    (let ((midi-list (get-midi-msgs config))
+			  (event-value (apply-deadzone (js-event-value) deadzone)))
+		      (let sendloop ((midi-list midi-list))
+			(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
+							       (equal? event-value *BUTTON-PRESSED*))
+							  #x7F
+							  event-value)))
+			       (msg-length (length msg)))
+			  (if (not (equal? msg-length 0))
+			      (begin 
+				(display msg) (newline)
+				(send-midi msg (length msg)))))
+			(if (not (null? (cdr midi-list)))
+			    (sendloop (cdr midi-list)))))
+		    (display "failed to get event\n")))
+	      (mainloop)))
 
-
-
-    (let mainloop ()
-      (let ((ev-res (get-js-event fd-joy)))
-	(if (equal? 0 ev-res) ; test if we got a valid js_event
-	    (let ((midi-list (get-midi-msgs config))
-		  (event-value (apply-deadzone (js-event-value) deadzone)))
-	      (let sendloop ((midi-list midi-list))
-		(let* ((msg  ((car midi-list) (if (and (equal? (js-event-type) *JS-EVENT-BUTTON*)
-						       (equal? event-value *BUTTON-PRESSED*))
-						  #x7F
-						  event-value)))
-		       (msg-length (length msg)))
-		  (if (not (equal? msg-length 0))
-		      (begin 
-			(display msg) (newline)
-			(send-midi msg (length msg)))))
-		(if (not (null? (cdr midi-list)))
-		    (sendloop (cdr midi-list)))))
-	    (display "failed to get event\n")))
-      (mainloop))
-
-    (close-joystick fd-joy)))
+	  (close-joystick fd-joy))))
