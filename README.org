@@ -28,6 +28,7 @@
 
 ** Changelog
 
+ * added Note-On/Off messages are supported
  * added deadzone commandline argument for axes
  * added usage commandline argument
  * added verbose commandline argument
@@ -217,14 +218,40 @@
 
 ** Implemented Midi Commands
 
+ To use Note-On/Off messages you should follow the following example configuration:
 
- | Command | Meaning                   | joystick read value | config                                 | comment                                    |
- |---------+---------------------------+---------------------+----------------------------------------+--------------------------------------------|
- |    0xB0 | Continous Controller (CC) | controller value    | CC ID                                  | see table of CC IDs in the [[./midicompendium.org][MIDI Compendium]] |
- |    0xC0 | Patch Change              | not used            | patch number                           |                                            |
- |    0xD0 | Channel Pressure          | pressure amount     | not used                               |                                            |
- |    0xE0 | Pitch Bend                | bend amount         | not used                               |                                            |
- |    0xF0 | SysEx Messages            | not used            | the SysEx Message which should be send |                                            |
+#+BEGIN_SRC lisp
+ ;; bind note-off and note-on to axis 1 for channel 1
+ ((a 1) 
+  (#x80 #x00) ; first send note-off, the value for note off is the last read value from axis 1
+  (#x90 #x00)) ; then send note-on, the value for note on is the current read value from axis 2
+#+END_SRC
+
+ So on two inputs on the same axis following MIDI Messages are generated:
+
+#+BEGIN_SRC 
+   # First Input: we start off with a 'last-value' of 0x00 which translates to MIDI note 64
+   0: 80 40 7f note off (channel  0): pitch  64, velocity 127
+   1: 90 40 7f note on  (channel  0): pitch  64, velocity 127
+
+   # Second Input: Last played note gets muted (compare msg 2 vs 1), new note sounds until next input
+   2: 80 40 7f note off (channel  0): pitch  64, velocity 127
+   3: 90 45 7f note on  (channel  0): pitch  69, velocity 127
+#+END_SRC
+
+ Any other use of Note-on/off is not tested, but you are free to experiment.
+ See the [[./input.conf][example configuration]], where a button is bound to CC 0x7B which mutes all sounding notes of a Channel.
+
+
+ | Command | Meaning                   | joystick read value | config                                 | comment                                     |
+ |---------+---------------------------+---------------------+----------------------------------------+---------------------------------------------|
+ |    0x80 | Note-Off                  | -                   | -                                      | note value is the value of the event bevore |
+ |    0x90 | Note-On                   | Note value          |                                        |                                             |
+ |    0xB0 | Continous Controller (CC) | controller value    | CC ID                                  | see table of CC IDs in the [[./midicompendium.org][MIDI Compendium]]  |
+ |    0xC0 | Patch Change              | not used            | patch number                           |                                             |
+ |    0xD0 | Channel Pressure          | pressure amount     | not used                               |                                             |
+ |    0xE0 | Pitch Bend                | bend amount         | not used                               |                                             |
+ |    0xF0 | SysEx Messages            | not used            | the SysEx Message which should be send |                                             |
 
  For further information see the included [[./midicompendium.org][MIDI Compendium]]
 
