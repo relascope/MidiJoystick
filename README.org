@@ -5,8 +5,7 @@
 
  All inputs are freely configurable and multiple MIDI Messages can be bound to the same input.
 
- All types of Midi Messages are supported, excluding Note-On (0x90) and Note-Off (0x80).
-
+ 
  See [[./input.conf][supplied configuration file]] for an example configuration for a XBOX 360 Controller.
  
 
