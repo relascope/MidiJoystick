@@ -221,14 +221,16 @@ struct js_event input_event;
   (print "  -h     \tprint this information\n")
   (print "  -j path\tjoystick device\n")
   (print "  -c path\tconfiguration file\n")
-  (print "  -d uint\tdeadzone radius for axes\n"))
+  (print "  -d uint\tdeadzone radius for axes\n")
+  (print "  -v     \tprint midi messages\n"))
 
 ;; MAIN
 
 (let* ((args (command-line))
        (js-file-flag (member "-j" args))
        (conf-file-flag (member "-c" args))
-       (deadzone-flag (member "-d" args)))
+       (deadzone-flag (member "-d" args))
+       (verbose-flag (member "-v" args)))
   ;; (display args) (newline)
 
     (if (member "-h" args)
@@ -259,8 +261,9 @@ struct js_event input_event;
 							  event-value)))
 			       (msg-length (length msg)))
 			  (if (not (equal? msg-length 0))
-			      (begin 
-				(display msg) (newline)
+			      (begin
+				(if verbose-flag
+				    (begin (display msg) (newline)))
 				(send-midi msg (length msg)))))
 			(if (not (null? (cdr midi-list)))
 			    (sendloop (cdr midi-list)))))
