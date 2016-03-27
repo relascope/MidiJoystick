@@ -6,7 +6,7 @@ struct js_event input_event;
 ")
 
 
-;; Global Constants
+;;;; Global Constants
 (define *JS-EVENT-AXIS* #x02)
 (define *JS-EVENT-BUTTON* #x01)
 (define *BUTTON-PRESSED* #x01)
@@ -14,10 +14,10 @@ struct js_event input_event;
 
 
 
-;; Misc Helper Functions
+;;;; Misc Helper Functions
 
 
-;; normalize value to zero if value is in range of [-deadzone,deadzone]
+;;; normalize value to zero if value is in range of [-deadzone,deadzone]
 (define (get-deadzone-function deadzone) 
   (define (apply-deadzone value)
     (if (and (< value deadzone)
@@ -27,10 +27,10 @@ struct js_event input_event;
   apply-deadzone)
 
 
-;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
+;;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
 (define (rotate-left lst)
   (append (cdr lst) (list (car lst))))
-  ;; `(,@(cdr lst) ,@(cons (car lst) '())))
+  ;`(,@(cdr lst) ,@(cons (car lst) '())))
 
 
 ;; map val from range [val-min,val-max] into output range [out-min,out-max]
@@ -39,7 +39,7 @@ struct js_event input_event;
     (inexact->exact (round (+ out-min (* slope (- val val-min)))))))
 
 
-;; returns a hash (ev-id #x40 #30) -> #x4030
+;;; returns a hash (ev-id #x40 #30) -> #x4030
 (define (ev-id t i)
   (bitwise-and
    (bitwise-ior (bitwise-and (arithmetic-shift t 8) #xFF00) (bitwise-and i #xFF))
@@ -47,9 +47,9 @@ struct js_event input_event;
 
 
 
-;; C Interface
+;;;; C Interface
 
-;; Functions to interact with static allocated struct js_event
+;;; Functions to interact with static allocated struct js_event
 (define js-event-value (c-lambda () int16 "___return(input_event.value);"))
 (define js-event-type (c-lambda () unsigned-int8 "___return(input_event.type);"))
 (define js-event-number (c-lambda () unsigned-int8 "___return(input_event.number);"))
@@ -62,23 +62,23 @@ struct js_event input_event;
     (print "event val: " value " type: " type " number: " number "\n")))
 
 
-;; Functions to interact with JackAudioServer
+;;; Functions to interact with JackAudioServer
 (define setup-jack (c-lambda () int "_setup_jack"))
 (define send-midi (c-lambda (scheme-object size_t) int "int res = SEND_MIDI(___arg1, ___arg2);  ___return(res);"))
 
 
-;; Functions to interact with joystick device file
+;;; Functions to interact with joystick device file
 (define open-joystick (c-lambda (nonnull-char-string) int "open_joystick" ))
 (define close-joystick (c-lambda (int) int "close_joystick"))
 
 
 
-;; Configfile Parsing
+;;;; Configfile Parsing
 
-;; data structure to hold a commandbinding
+;;; data structure to hold a commandbinding
 (define-structure midi cmd ch param func last-value)
 
-;; returns a table(k,v) where: k := (ev-id t i); v = '(<instance[s] of midi> ... )
+;;; returns a table(k,v) where: k := (ev-id t i); v = '(<instance[s] of midi> ... )
 (define (parse-config path)
 
 
@@ -130,23 +130,28 @@ struct js_event input_event;
     (define (build-msg-no-param midi-conf)
       (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(js-val-to-midi input-val))))
 
-    (define (build-msg-note-on/off midi-conf)
+    (define (build-msg-note-on midi-conf)
       (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf))) (js-val-to-midi input-val)) #x7F)))
 
+    (define (build-msg-note-off midi-conf)
+      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf))) (js-val-to-midi (midi-last-value midi-conf))) #x7F)))
+
+    
     (define (build-msg-pitch-bend midi-conf)
       (let ((split-input-val (lambda (input-val) (cons (bitwise-and input-val *MIDI-VAL-MAX*) (cons (bitwise-and (arithmetic-shift input-val -7) *MIDI-VAL-MAX*) '())))))
 	(lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(split-input-val (map-to-range
 										   (js-val-to-pos-js-val input-val)
 										   *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-Pitch-Bend-MAX*))))))
+
     ;; dispatcher
-    
     (let ((cmd (midi-cmd midi-conf)))
       (cond ((equal? cmd *MIDI-CMD-Continus-Controller*) (build-msg-input-last midi-conf))
 	    ((equal? cmd *MIDI-CMD-Patch-Change*) (build-msg-no-input midi-conf))
 	    ((equal? cmd *MIDI-CMD-Channel-Pressure*) (build-msg-no-param midi-conf))
 	    ((equal? cmd *MIDI-CMD-Pitch-Bend*) (build-msg-pitch-bend midi-conf))
 	    ((equal? cmd *MIDI-CMD-SYSEX*) (build-msg-no-input midi-conf))
-	    ;; ((or (equal? cmd *MIDI-CMD-Note-Off*) (equal? cmd *MIDI-CMD-Note-On*)) (build-msg-note-on/off midi-conf))
+	    ((equal? cmd *MIDI-CMD-Note-On*) (build-msg-note-on midi-conf))
+	    ((equal? cmd *MIDI-CMD-Note-Off*) (build-msg-note-off midi-conf))
 	    (else (lambda (input-val) '() )))))
 
 
@@ -191,14 +196,14 @@ struct js_event input_event;
     config-table))
 
 
-;; returns a list of complete midi messages
+;;; returns a list of complete midi messages
 (define (get-midi-msgs config-table event-value apply-deadzone)
 
   ;; predicate if combination of type and value equals a button-pressed event
   (define (button-pressed? type value)
     (if (and (equal? type *JS-EVENT-BUTTON*) (equal? value *BUTTON-PRESSED*)) #t #f))
 
-  ; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
+  ;; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
   (define (build-button-command-list event-id)
     (let ((midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) -1)))))
       (table-set! config-table event-id (rotate-left midi-lst))
@@ -208,12 +213,20 @@ struct js_event input_event;
 		 event-value))
 	    (list '()))))
 
-  ; returns '(lambda (input-val) (...) ...) retrieved from config table by event-id
+  ;; returns list of midi messages where the deadzone is applied to event-value and sets the current event-value as last-value after that
   (define (build-axis-command-list event-id)
     (letrec ((build (lambda (lst) (if (null? lst) lst
 				      (cons ((midi-func (car lst)) (apply-deadzone event-value))
-					    (build (cdr lst)))))))
-      (build (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) -1))))))
+					    (build (cdr lst))))))
+	     (midi-instances (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) -1))))
+	     (res (build midi-instances)) ; save result of midi messages
+	     (update-last-value (lambda (midi-instance) (midi-last-value-set! midi-instance (apply-deadzone event-value)))))
+      ;; apply the current event-value as last-value, this is a sideffect
+      (let update-last-values-loop ((midi-instances midi-instances))
+	(update-last-value (car midi-instances)) 
+	(if (not (null? (cdr midi-instances)))
+	    (update-last-values-loop (cdr midi-instances))))
+      res))
   
   (let* ((event-type (js-event-type))
 	 (event-id (ev-id event-type (js-event-number))))
@@ -225,6 +238,9 @@ struct js_event input_event;
 
 
 
+;;;; MAIN
+
+;;; helper which prints the usage
 (define (print-usage name)
   (print "Usage: " name " [options]\n")
   (print "Options:\n")
@@ -234,8 +250,8 @@ struct js_event input_event;
   (print "  -d uint\tdeadzone radius for axes\n")
   (print "  -v     \tprint midi messages\n"))
 
-;; MAIN
 
+;;; the main thingy
 (let* ((args (command-line))
        (js-file-flag (member "-j" args))
        (conf-file-flag (member "-c" args))
@@ -270,8 +286,7 @@ struct js_event input_event;
 			       (msg-length (length msg)))
 			  (if (not (equal? msg-length 0))
 			      (begin
-				(if verbose-flag
-				    (begin (display msg) (newline)))
+				(if verbose-flag (begin (display msg) (newline)))
 				(send-midi msg (length msg)))))
 			(if (not (null? (cdr midi-list)))
 			    (sendloop (cdr midi-list)))))
