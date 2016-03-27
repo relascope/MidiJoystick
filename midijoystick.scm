@@ -6,6 +6,8 @@ struct js_event input_event;
 ")
 
 
+(define *VERSION* "1.0.0")
+
 ;;;; Global Constants
 (define *JS-EVENT-AXIS* #x02)
 (define *JS-EVENT-BUTTON* #x01)
@@ -268,6 +270,7 @@ struct js_event input_event;
 ;;; helper which prints the usage
 (define (print-usage name)
   (print "Usage: " name " [options]\n")
+  (print "Version: " *VERSION* "\n")
   (print "Options:\n")
   (print "  -h     \tprint this information\n")
   (print "  -j path\tjoystick device\n")

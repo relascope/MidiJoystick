@@ -1,4 +1,4 @@
-* Midijoystick
+* MidiJoystick (VERSION 1.0.0)
 
 
  MidiJoystick is a client for the [[http://www.jackaudio.org/][Jack Audio Connection Kit]] on Linux (and maybe other unixlikes) which lets you use your joystick as a midicontroller.
@@ -27,6 +27,8 @@
 
 
 ** Changelog
+
+*** VERSION 1.0.0
 
  * added Note-On/Off messages are supported
  * added deadzone commandline argument for axes
