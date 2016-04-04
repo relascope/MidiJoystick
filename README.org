@@ -275,11 +275,10 @@
  - midijoystick:    main program
 
  Dependencies:
- - [[http://www.jackaudio.org][Jack Audio Connection Kit]]
- - [[http://gambitscheme.org/wiki/index.php/Main_Page][Gambit]] 
+ - [[http://www.jackaudio.org][Jack Audio Connection Kit]] Tested Version: jack2 1.9.10-4
+ - [[http://gambitscheme.org/wiki/index.php/Main_Page][Gambit]] Tested Version: 4.8.4-1
 
-
- 
+ Tested Version numbers taken from the Arch Linux Packages.
 
 ** Additional Notes
 
@@ -294,11 +293,12 @@
 ** Source Code Map
 
 
- | file(s)          | comments                                  |
- |------------------+-------------------------------------------|
- | midijoystick.scm | main program                              |
- | joystick.{c,h}   | for talking with the joystick device file |
- | midijack.{c,h}   | for talking with jackaudio server         |
+ | file(s)          | comments                                                                  |
+ |------------------+---------------------------------------------------------------------------|
+ | midijoystick.scm | main program                                                              |
+ | glue.{c,h}       | glue.c gets included into midijoystick.scm it holds some helper functions |
+ | joystick.{c,h}   | for talking with the joystick device file                                 |
+ | midijack.{c,h}   | for talking with jackaudio server                                         |
 
 
 ** License
