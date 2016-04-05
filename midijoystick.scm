@@ -333,6 +333,6 @@ struct js_event input_event;
 			    (table-set! last-input-table event-id current-event))))
 		    
 		    (display "failed to get event\n")))
-	      (mainloop)))
+	      (mainloop))
 
-	  (close-joystick fd-joy))))
+	    (close-joystick fd-joy)))))
