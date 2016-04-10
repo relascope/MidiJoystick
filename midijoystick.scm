@@ -6,7 +6,7 @@ struct js_event input_event;
 ")
 
 
-(define *VERSION* "1.0.0")
+(define *VERSION* "1.0.1")
 
 ;;;; Global Constants
 (define *JS-EVENT-AXIS* #x02)
