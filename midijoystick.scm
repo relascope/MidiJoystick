@@ -13,34 +13,72 @@ struct js_event input_event;
 (define *JS-EVENT-BUTTON* #x01)
 (define *BUTTON-PRESSED* #x01)
 (define *BUTTON-RELEASED* #x00)
-
-
+(define *AXIS-REAL-MIN* -32767)
+(define *AXIS-REAL-MAX* 32767)
+(define *AXIS-POS-MAX* #xFFFF)
+(define *AXIS-POS-MIN* #x0000)
+(define *MIDI-VAL-MAX* #x7F)
+(define *MIDI-VAL-MIN* #x00)
+(define *MIDI-VAL-CENTER* #x40)
+(define *MIDI-PITCH-BEND-MAX* #x3FFF)
+(define *MIDI-PITCH-BEND-CENTER* #x2000)
 
 ;;;; Misc Helper Functions
 
+(define deadzone (make-parameter 0))
 
-;;; normalize value to zero if value is in range of [-deadzone,deadzone]
-(define (get-deadzone-function deadzone) 
-  (define (apply-deadzone value)
-    (if (equal? #f value)
-	value
-	(if (and (< value deadzone)
-		 (> value (- deadzone)))
-	    0
-	    value)))
-  apply-deadzone)
+(define midi-spline-knots
+  (lambda () `((,*AXIS-REAL-MIN* . ,*MIDI-VAL-MIN*)
+	       (,(- (deadzone)) . ,*MIDI-VAL-CENTER*)
+	       (,(deadzone) . ,*MIDI-VAL-CENTER*)
+	       (,*AXIS-REAL-MAX* . ,*MIDI-VAL-MAX*))))
+
+(define midi-pitch-bend-spline-knots
+  (lambda () `((,*AXIS-REAL-MIN* . ,*MIDI-VAL-MIN*)
+	       (,(- (deadzone)) . ,*MIDI-PITCH-BEND-CENTER*)
+	       (,(deadzone) . ,*MIDI-PITCH-BEND-CENTER*)
+	       (,*AXIS-REAL-MAX* . ,*MIDI-PITCH-BEND-MAX*))))
+
+(define deadzone-knots
+  (lambda () `((,*AXIS-REAL-MIN* . ,*AXIS-REAL-MIN*)
+	       (,(- (deadzone)) . 0)
+	       (,(deadzone) . 0)
+	       (,*AXIS-REAL-MAX* . ,*AXIS-REAL-MAX*))))
+
+(define (find-segment val spline-knots)
+  (let loop ((lower-bound (car (spline-knots)))
+	     (bounds (cdr (spline-knots))))
+    (cond ((null? bounds) '())
+	  (else
+	   (let ((upper-bound (car bounds)))
+	     (if (and (<= (car lower-bound) val)
+		      (<= val (car upper-bound)))
+		 (cons lower-bound  upper-bound)
+		 (loop upper-bound (cdr bounds))))))))
+
+(define (transpose val segment)
+  (let* ((lower-bound (car segment))
+	 (upper-bound (cdr segment))
+	 (scaled-val (- val (car lower-bound)))
+	 (steps (+ 0.0 (- (car upper-bound) (car lower-bound))))
+	 (ramp (/ (- (cdr upper-bound) (cdr lower-bound)) steps)))
+    (inexact->exact (round (+ (cdr lower-bound) (* ramp scaled-val))))))
+
+
+(define (transpose-to-deadzone val)
+  (transpose val (find-segment val deadzone-knots)))
+
+(define (transpose-to-midi val)
+  (transpose val (find-segment val midi-spline-knots)))
+
+(define (transpose-to-pitch-bend val)
+  (transpose val (find-segment val midi-pitch-bend-spline-knots)))
 
 
 ;;; rotate list left: (rotate-left '(1 2 4)) -> '(4 1 2)
 (define (rotate-left lst)
   (append (cdr lst) (list (car lst))))
   ;`(,@(cdr lst) ,@(cons (car lst) '())))
-
-
-;; map val from range [val-min,val-max] into output range [out-min,out-max]
-(define (map-to-range val val-min val-max out-min out-max)
-  (let ((slope (/ (- out-max out-min) (- val-max val-min))))
-    (inexact->exact (round (+ out-min (* slope (- val val-min)))))))
 
 
 ;;; returns a hash (ev-id #x40 #30) -> #x4030
@@ -109,13 +147,7 @@ struct js_event input_event;
   (define (midi-func-dispatch midi-conf)
 
     ;; constant values needed by this function
-    (define *AXIS-REAL-MIN* -32767)
-    (define *AXIS-REAL-MAX* 32767)
-    (define *AXIS-POS-MAX* #xFFFF)
-    (define *AXIS-POS-MIN* #x0000)
-    (define *MIDI-VAL-MAX* #x7F)
-    (define *MIDI-VAL-MIN* #x00)
-    (define *MIDI-Pitch-Bend-MAX* #x3FFF)
+
 
     (define *MIDI-CMD-Note-Off* #x80)
     (define *MIDI-CMD-Note-On* #x90)
@@ -125,14 +157,6 @@ struct js_event input_event;
     (define *MIDI-CMD-Pitch-Bend* #xE0)
     (define *MIDI-CMD-SYSEX* #xF0)
     
-    ;; maps +/- joystick input value into positive spectrum
-    (define (js-val-to-pos-js-val val)
-      (map-to-range val *AXIS-REAL-MIN* *AXIS-REAL-MAX* *AXIS-POS-MIN* *AXIS-POS-MAX*))
-
-    ;; maps a joystick input first to positive spectrum, then into midi spectrum
-    (define (js-val-to-midi val)  
-      (let ((pos-val (js-val-to-pos-js-val val)))
-	(bitwise-and *MIDI-VAL-MAX*  (map-to-range pos-val *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-VAL-MAX*))))
 
 
     ;; lambda function creators
@@ -142,24 +166,24 @@ struct js_event input_event;
 	    (else (bitwise-ior (midi-cmd midi-conf) (midi-ch midi-conf)))))
 
     (define (build-msg-input-last midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,(js-val-to-midi input-val))))
+      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,(transpose-to-midi input-val))))
 
     (define (build-msg-input-first midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(js-val-to-midi input-val) ,@(midi-param midi-conf))))
+      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(transpose-to-midi input-val) ,@(midi-param midi-conf))))
 
     (define (build-msg-no-input midi-conf)
       (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf))))
 
     (define (build-msg-no-param midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(js-val-to-midi input-val))))
+      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(transpose-to-midi input-val))))
 
     (define (build-msg-note-on midi-conf)
       (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf)))
-								 (js-val-to-midi input-val)) #x7F)))
+								 (transpose-to-midi input-val)) #x7F)))
 
     (define (build-msg-note-off midi-conf)
       (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf)))
-								 (js-val-to-midi (midi-last-value midi-conf))) #x7F)))
+								 (transpose-to-midi (midi-last-value midi-conf))) #x7F)))
 
     
     (define (build-msg-pitch-bend midi-conf)
@@ -167,8 +191,7 @@ struct js_event input_event;
 			       (cons (bitwise-and input-val *MIDI-VAL-MAX*)
 				     (cons (bitwise-and (arithmetic-shift input-val -7) *MIDI-VAL-MAX*) '())))))
 	(lambda (input-val) `(,(build-midi-cmd-byte midi-conf)
-			      ,@(split-input-val (map-to-range (js-val-to-pos-js-val input-val)
-							       *AXIS-POS-MIN* *AXIS-POS-MAX* *MIDI-VAL-MIN* *MIDI-Pitch-Bend-MAX*))))))
+			      ,@(split-input-val (transpose-to-pitch-bend  input-val))))))
 
     ;; dispatcher
     (let ((cmd (midi-cmd midi-conf)))
@@ -224,7 +247,7 @@ struct js_event input_event;
 
 
 ;;; returns a list of complete midi messages
-(define (get-midi-msgs config-table current-event apply-deadzone)
+(define (get-midi-msgs config-table current-event)
 
   ;; predicate if combination of type and value equals a button-pressed event
   (define (button-pressed? current-event)
@@ -245,11 +268,11 @@ struct js_event input_event;
   (define (build-axis-command-list)
     (letrec ((event-id (js-event-ev-id current-event))
 	     (build (lambda (lst) (if (null? lst) lst
-				      (cons ((midi-func (car lst)) (apply-deadzone (js-event-value current-event)))
+				      (cons ((midi-func (car lst)) (transpose-to-deadzone (js-event-value current-event)))
 					    (build (cdr lst))))))
 	     (midi-instances (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) #f))))
 	     (res (build midi-instances)) ; save result of midi messages
-	     (update-last-value (lambda (midi-instance) (midi-last-value-set! midi-instance (apply-deadzone (js-event-value current-event))))))
+	     (update-last-value (lambda (midi-instance) (midi-last-value-set! midi-instance (transpose-to-deadzone (js-event-value current-event))))))
       ;; apply the current event-value as last-value, this is a sideeffect
       (let update-last-values-loop ((midi-instances midi-instances))
 	(update-last-value (car midi-instances)) 
@@ -298,19 +321,20 @@ struct js_event input_event;
 		(config (if (and conf-file-flag (> (length conf-file-flag) 1))
 			    (parse-config (cadr conf-file-flag))
 			    (parse-config "./input.conf")))
-		(apply-deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
-				    (get-deadzone-function (string->number (cadr deadzone-flag)))
-				    (get-deadzone-function 0)))
+
 		(last-input-table (make-table))
 		(make-dummy-js-event (lambda (ev-id) (make-js-event ev-id 0 0 0 #f #f #f)))
-		(compare-js-event (lambda (ev1 ev2) (let ((ev-val1 (apply-deadzone (js-event-value ev1)))
-							  (ev-val2 (apply-deadzone (js-event-value ev2))))
+		(compare-js-event (lambda (ev1 ev2) (let ((ev-val1 (transpose-to-deadzone (js-event-value ev1)))
+							  (ev-val2 (transpose-to-deadzone (js-event-value ev2))))
+						      ;(print ev-val2 " " ev-val1) (newline)
 						      (if (and (js-event-valid ev1) (js-event-valid ev2)
 							       (equal? ev-val2 ev-val1))
 							  #t
 							  #f)))))
   
-
+	    (deadzone (if (and deadzone-flag (> (length deadzone-flag) 1))
+				    (string->number (cadr deadzone-flag))
+				    0)) 
 	    (setup-jack)
 	    (let mainloop ()
 	      (let ((current-event (get-js-event)))
@@ -320,7 +344,7 @@ struct js_event input_event;
 			   (last-input (table-ref last-input-table event-id (make-dummy-js-event event-id))))
 ;		      (display last-input) (newline) (display current-event) (newline) (newline)
 		      (if (or (js-event-is-button? current-event) (not (compare-js-event current-event last-input)))
-			  (let ((midi-list (get-midi-msgs config current-event apply-deadzone)))
+			  (let ((midi-list (get-midi-msgs config current-event)))
 			    (let sendloop ((midi-list midi-list))
 			      (let* ((msg  (car midi-list))
 				     (msg-length (length msg)))

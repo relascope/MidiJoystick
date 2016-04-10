@@ -1,0 +1,10 @@
+*** VERSION 1.0.1
+ 
+ * fixed deadzone issue https://github.com/osune/MidiJoystick/issues/1
+
+*** VERSION 1.0.0
+
+ * added Note-On/Off messages are supported
+ * added deadzone commandline argument for axes
+ * added usage commandline argument
+ * added verbose commandline argument
