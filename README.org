@@ -1,5 +1,7 @@
+
 * MidiJoystick (VERSION 1.0.1)
 
+WARNING: THIS IS NOT COMPATIBLE WITH GAMBIT 4.2.X But feel free to hack away anyways.
 
  MidiJoystick is a client for the [[http://www.jackaudio.org/][Jack Audio Connection Kit]] on Linux (and maybe other unixlikes) which lets you use your joystick as a midicontroller.
 
