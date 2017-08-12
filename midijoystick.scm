@@ -6,7 +6,7 @@ struct js_event input_event;
 ")
 
 
-(define *VERSION* "1.0.1")
+(define *VERSION* "1.1.0")
 
 ;;;; Global Constants
 (define *JS-EVENT-AXIS* #x02)
@@ -137,13 +137,13 @@ struct js_event input_event;
 ;;;; Configfile Parsing
 
 ;;; data structure to hold a commandbinding
-(define-structure midi cmd ch param func last-value)
+(define-structure midi cmd ch param func last-value btn-value)
 
 ;;; returns a table(k,v) where: k := (ev-id t i); v = '(<instance[s] of midi> ... )
 (define (parse-config path)
 
 
-  ;; returns a (lambda (joystick-input-val) (...)) function based on MIDI Command found in midi-conf (which is a midi structure)
+  ;; returns a (lambda (joystick-input-val transpose?) (...)) function based on MIDI Command found in midi-conf (which is a midi structure)
   (define (midi-func-dispatch midi-conf)
 
     ;; constant values needed by this function
@@ -166,32 +166,50 @@ struct js_event input_event;
 	    (else (bitwise-ior (midi-cmd midi-conf) (midi-ch midi-conf)))))
 
     (define (build-msg-input-last midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,(transpose-to-midi input-val))))
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf) ,(if transpose?
+												      (transpose-to-midi input-val)
+												      input-val))))
 
     (define (build-msg-input-first midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(transpose-to-midi input-val) ,@(midi-param midi-conf))))
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,(if transpose?
+									     (transpose-to-midi input-val)
+									     input-val)
+				       ,@(midi-param midi-conf))))
 
     (define (build-msg-no-input midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf))))
+      (display midi-conf)
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,@(midi-param midi-conf))))
 
     (define (build-msg-no-param midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(transpose-to-midi input-val))))
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,(if transpose?
+									     (transpose-to-midi input-val)
+									     input-val))))
 
     (define (build-msg-note-on midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf)))
-								 (transpose-to-midi input-val)) #x7F)))
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf))
+										0 (car (midi-param midi-conf)))
+									    (if transpose?
+										(transpose-to-midi input-val)
+										input-val))
+				       #x7F)))
 
     (define (build-msg-note-off midi-conf)
-      (lambda (input-val) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf)))
-								 (transpose-to-midi (midi-last-value midi-conf))) #x7F)))
+      (lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf) ,(+ (if (null? (midi-param midi-conf)) 0 (car (midi-param midi-conf)))
+									    (if transpose?
+										(transpose-to-midi (midi-last-value midi-conf))
+										(midi-last-value midi-conf)))
+				       #x7F)))
 
     
     (define (build-msg-pitch-bend midi-conf)
       (let ((split-input-val (lambda (input-val)
 			       (cons (bitwise-and input-val *MIDI-VAL-MAX*)
 				     (cons (bitwise-and (arithmetic-shift input-val -7) *MIDI-VAL-MAX*) '())))))
-	(lambda (input-val) `(,(build-midi-cmd-byte midi-conf)
-			      ,@(split-input-val (transpose-to-pitch-bend  input-val))))))
+	(lambda (input-val transpose?) `(,(build-midi-cmd-byte midi-conf)
+					 ,@(split-input-val
+					    (if transpose?
+						(transpose-to-pitch-bend  input-val)
+						input-val))))))
 
     ;; dispatcher
     (let ((cmd (midi-cmd midi-conf)))
@@ -202,25 +220,36 @@ struct js_event input_event;
 	    ((equal? cmd *MIDI-CMD-SYSEX*) (build-msg-no-input midi-conf))
 	    ((equal? cmd *MIDI-CMD-Note-On*) (build-msg-note-on midi-conf))
 	    ((equal? cmd *MIDI-CMD-Note-Off*) (build-msg-note-off midi-conf))
-	    (else (lambda (input-val) '() )))))
+	    (else (lambda (input-val transpose?) '() )))))
 
 
 
   ;; short helper to create an instance of midi structure based on commandbinding
-  (define (create-midi-struct command-binding)
+  (define (create-midi-struct command-binding input-type)
     (let* ((cmd-ch (car command-binding))
-	   (midi (make-midi (car cmd-ch)
-			    (if (pair? (cdr cmd-ch)) (cadr cmd-ch))
-			    (cdr command-binding)
-			    (lambda (input-val) '())
-			    0)))
+	   (command-binding-length (length command-binding))
+	   (is-sysex? (not (pair? (cdr cmd-ch))))
+	   (midi (make-midi (car cmd-ch)                               ;; command
+			    (if is-sysex?                              ;; channel
+				(cdr cmd-ch)
+				(cadr cmd-ch))
+			    (cdr (if is-sysex?                         ;; parameters
+				     command-binding
+				     (car command-binding)))
+			    (lambda (input-val transpose?) '())        ;; function placeholder
+			    0                                          ;; last value
+			    '())))                                     ;; btn-value
+;      (display command-binding) (newline) (display (length command-binding)) (newline)
+      (if (and (equal? input-type *JS-EVENT-BUTTON*) (equal? command-binding-length 3))
+	  (midi-btn-value-set! midi (list-ref  command-binding 2)))
       (midi-func-set! midi (midi-func-dispatch midi))
+;      (display midi) (newline)
       midi))
 
   ;; traverse a list of commandbindings and returns a list of midi instances
-  (define (create-list-of-midi-structs command-bindings)
+  (define (create-list-of-midi-structs command-bindings input-type)
     (if (null? command-bindings) command-bindings
-	(cons (create-midi-struct (car command-bindings)) (create-list-of-midi-structs (cdr command-bindings)))))
+	(cons (create-midi-struct (car command-bindings) input-type) (create-list-of-midi-structs (cdr command-bindings) input-type))))
 
   
   (let ((config-list (call-with-input-file path read))
@@ -236,7 +265,7 @@ struct js_event input_event;
 	     (i (cadr id)))
 	;; (display command-bindings) (newline)
 	(if (equal? t #f) (begin (display  "failed to parse line: ") (display entry) (newline)) 
-	    (table-set! config-table (ev-id t i) (create-list-of-midi-structs command-bindings)))))
+	    (table-set! config-table (ev-id t i) (create-list-of-midi-structs command-bindings t)))))
 
     ;; loop traversing config entries
     (let loop ((config-list config-list))
@@ -253,24 +282,28 @@ struct js_event input_event;
   (define (button-pressed? current-event)
     (if (and (js-event-is-button? current-event) (equal? (js-event-value current-event) *BUTTON-PRESSED*)) #t #f))
 
-  ;; returns single element list of '(lambda (input-val) (...)), rotates stored midi instances in config-table left by one
+  ;; returns single element list of '(lambda (input-val transpose?) (...)), rotates stored midi instances in config-table left by one
   (define (build-button-command-list)
     (let*  ((event-id (js-event-ev-id current-event))
-	    (midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) #f)))))
-      (table-set! config-table event-id (rotate-left midi-lst)) ; this is a sideeffect
-      (cons ((midi-func (car midi-lst))
+	    (midi-lst (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x y) '()) #f '()))))
+	    (argument-to-midi-func
 	     (if (button-pressed? current-event)
-		 #x7F
-		 (js-event-value current-event)))
+		 (let ((btn-value (midi-btn-value (car midi-lst))))
+		   (if (not (null? btn-value))
+		       btn-value
+		       #x7F))
+		 (js-event-value current-event))))
+      (table-set! config-table event-id (rotate-left midi-lst)) ; this is a sideeffect
+      (cons ((midi-func (car midi-lst)) argument-to-midi-func #f)
 	    (list '()))))
 
   ;; returns list of midi messages where the deadzone is applied to event-value and sets the current event-value as last-value after that
   (define (build-axis-command-list)
     (letrec ((event-id (js-event-ev-id current-event))
 	     (build (lambda (lst) (if (null? lst) lst
-				      (cons ((midi-func (car lst)) (transpose-to-deadzone (js-event-value current-event)))
+				      (cons ((midi-func (car lst)) (transpose-to-deadzone (js-event-value current-event)) #t)
 					    (build (cdr lst))))))
-	     (midi-instances (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x) '()) #f))))
+	     (midi-instances (table-ref config-table event-id (list (make-midi #x00 #x00 '() (lambda (x y) '()) #f '()))))
 	     (res (build midi-instances)) ; save result of midi messages
 	     (update-last-value (lambda (midi-instance) (midi-last-value-set! midi-instance (transpose-to-deadzone (js-event-value current-event))))))
       ;; apply the current event-value as last-value, this is a sideeffect
@@ -345,6 +378,7 @@ struct js_event input_event;
 ;		      (display last-input) (newline) (display current-event) (newline) (newline)
 		      (if (or (js-event-is-button? current-event) (not (compare-js-event current-event last-input)))
 			  (let ((midi-list (get-midi-msgs config current-event)))
+;			    (display midi-list) (newline)
 			    (let sendloop ((midi-list midi-list))
 			      (let* ((msg  (car midi-list))
 				     (msg-length (length msg)))

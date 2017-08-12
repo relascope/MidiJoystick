@@ -1,5 +1,5 @@
 
-* MidiJoystick (VERSION 1.0.1)
+* MidiJoystick (VERSION 1.1.0)
 
 WARNING: THIS IS NOT COMPATIBLE WITH GAMBIT 4.2.X But feel free to hack away anyways.
 
@@ -140,6 +140,46 @@ WARNING: THIS IS NOT COMPATIBLE WITH GAMBIT 4.2.X But feel free to hack away any
 
           third  press: Send SysEx to send MMC Start is issued
 
+*** Buttons:
+
+ Since version 1.1.0 you can specify a value which gets emitted when a
+ button is pressed.  This means on all supported MIDI messages (CC,
+ Note-On/Off, Pitch Bend) a button press can emit another value then
+ 0x7F.  This change allows to play one defined note, using CCs which
+ act more like a switch (see [[./midicompendium.org][Midicompendium]]) or applying a defined Pitch
+ Bend value.
+
+ Take note that _no_ bound checking is done. The values you supply
+ _must_ be in the range [0x00, 0x7F] ([0x0000, 0x3FFF] for Pitch Bend).
+
+ The format for this new configuration feature is:
+
+#+BEGIN_SRC lisp
+ ((t i)
+   ((CMD CH) PARAM BUTTON_VALUE))
+#+END_SRC
+
+ An example:
+
+#+BEGIN_SRC lisp
+ ((b 5)  ;; bind button 5
+  ((#xB0 #x04) #x40 #x7F)    ;; CC 0x40 (Damper/Sustain) on Channel 5 with the value 0x7F (ON)
+  ((#xB0 #x04) #x40 #x00))  ;; CC 0x40 (Damper/Sustain) on Channel 5 with the value 0x00 (OFF)
+#+END_SRC
+
+ As you can see the rules for buttons as explained above still apply:
+ You have to supply two lines with different `BUTTON_VALUE` to toggle between two states.
+
+ If you ommit `BUTTON_VALUE` a value of 0x7F is used. Which means you can write the example above as:
+
+#+BEGIN_SRC lisp
+ ((b 5)  ;; bind button 5
+  ((#xB0 #x04) #x40)    ;; CC 0x40 (Damper/Sustain) on Channel 5 with the _implicit_ value 0x7F (ON)
+  ((#xB0 #x04) #x40 #x00))  ;; CC 0x40 (Damper/Sustain) on Channel 5 with the value 0x00 (OFF)
+#+END_SRC
+
+
+
 *** Examples:
 
  Here are some examples how a configuration entry can look like:
@@ -250,16 +290,15 @@ WARNING: THIS IS NOT COMPATIBLE WITH GAMBIT 4.2.X But feel free to hack away any
 
  For further information see the included [[./midicompendium.org][MIDI Compendium]]
 
-** [[./midicompendium.org][MIDI Compendium]
+** [[./midicompendium.org][MIDI Compendium]]
 
 ** TODOs
-
    
 - TODO Support System Realtime Messages (Start, Stop, Reset )
-- TODO allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)
+- TODO +allow to configure midi value emitted when button is pressed (instead of hardcoded 0x7F)+ fixed in 1.1.0
 - TODO _maybe_ find a way to configure buttons as mod keys for axis events (e.g. axis mapped to Pitch Bend, hold a button and axis now emits CC )
 
-
+  
 
 ** How to build
 
@@ -279,11 +318,7 @@ WARNING: THIS IS NOT COMPATIBLE WITH GAMBIT 4.2.X But feel free to hack away any
  The joystick api maps axes values to a int16_t (positive and negative) range. While midi data bytes range from 0x00 to 0x7F.
  So we're mapping the axis values to uint16_t and then to the midi data range (0x00 - 0x7F), thus the real axis value of 0x00 is a midi
  value of 0x40. A real axis value of 0x00 occures when the axis controler is at center position.
-
- Buttons emit midi values of 0x7F when pressed and no signal when released, so their usefullness is subpar as for example
- mapping a button to Note-on would make not much sense.
  
-
 ** Source Code Map
 
 
