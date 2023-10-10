@@ -4,7 +4,7 @@ project(MidiJoystick)
 set(CMAKE_CXX_STANDARD 20)
 #target_compile_options(MidiJoystick PUBLIC -Wall -Wextra -Wfloat-conversion )
 
-file(GLOB_RECURSE sources      main.cpp glue.c joystick.c  midijack.c )
+file(GLOB_RECURSE sources       glue.c joystick.c  midijack.c main.cpp )
 
 # include all source files
 add_executable(MidiJoystick ${sources} )

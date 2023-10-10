@@ -24,19 +24,27 @@ struct js_event {
 
 #include <linux/joystick.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define EVENT_BTN_PRESSED 0x1
 #define EVENT_BTN_RELEASED 0x0
 
-int open_joystick(char*);
+extern int open_joystick(char*);
 
-int close_joystick(int);
+extern int close_joystick(int);
 
-int get_joystick_event(int fd, struct js_event *);
+extern int get_joystick_event(int fd, struct js_event *);
 
-void debug_print_joystick_event(const struct js_event * const);
+extern void debug_print_joystick_event(const struct js_event * const);
 
-int get_number_of_axes(int fd);
+extern int get_number_of_axes(int fd);
 
-int get_number_of_buttons(int fd);
+extern int get_number_of_buttons(int fd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
