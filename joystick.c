@@ -5,7 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <stropts.h>
+//#include <stropts.h>
 
 #include "joystick.h"
 
