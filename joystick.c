@@ -66,7 +66,7 @@ int get_joystick_event(int fd, struct js_event * event)
      errno = 0;
      if((bytes = read(fd, event, sizeof(*event))) == -1) {
 	  if (errno != EAGAIN)
-	       perror("read joystick event");
+	       perror("read joystick rawEvent");
 	  return bytes;
      }
      if (bytes == sizeof(*event)) {

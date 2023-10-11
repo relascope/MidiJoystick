@@ -10,9 +10,9 @@ is linux/joystick.h depricated?
 Based on https://www.kernel.org/doc/Documentation/input/joystick-api.txt
 
 struct js_event {
-     uint32_t time;   // event timestamp in milliseconds
+     uint32_t time;   // rawEvent timestamp in milliseconds
      int16_t value;   // value 
-     uint8_t type;    // event type
+     uint8_t type;    // rawEvent type
      uint8_t number;  // axis/button number
 };
 
